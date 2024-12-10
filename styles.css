@@ -1,0 +1,132 @@
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    color: #333;
+    background-color: #f9f9f9;
+}
+
+header {
+    background: linear-gradient(90deg, #78ffb2, #58d8a3);
+    padding: 20px;
+    text-align: center;
+    color: #333;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 2.8em;
+    font-weight: bold;
+}
+
+header p {
+    margin: 10px 0 0;
+    font-size: 1.2em;
+    color: #444;
+}
+
+nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0 0;
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+}
+
+nav ul li a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+nav ul li a:hover {
+    color: #58d8a3;
+}
+
+section {
+    padding: 30px;
+    max-width: 1200px;
+    margin: auto;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 2em;
+    color: #222;
+    border-bottom: 2px solid #78ffb2;
+    display: inline-block;
+    padding-bottom: 5px;
+}
+
+.projects {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.project {
+    text-align: center;
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 10px;
+    width: 250px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.project:hover {
+    transform: scale(1.08);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+.project img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.project p {
+    margin-top: 10px;
+    font-size: 1.1em;
+    color: #444;
+}
+
+#contact p {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.1em;
+    margin: 15px 0;
+}
+
+#contact i {
+    color: #58d8a3;
+    font-size: 1.3em;
+}
+
+
+footer {
+    text-align: center;
+    padding: 15px;
+    background: linear-gradient(90deg, #78ffb2, #58d8a3);
+    margin-top: 20px;
+    color: #333;
+    font-weight: bold;
+}
+.about-image img {
+    width: 3cm; 
+    height: 5cm; 
+    object-fit: fill; 
+    border-radius: 100%; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+}
