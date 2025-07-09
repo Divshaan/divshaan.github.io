@@ -22,28 +22,20 @@
 #page-transition-overlay.animate {
     opacity: 1;
     pointer-events: all;
-    animation: glitch-jitter 0.7s steps(2, end) infinite;
-}
-#page-transition-overlay::before,
-#page-transition-overlay::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: var(--background-color);
-    visibility: hidden;
+    /* UPDATED: Reduced animation duration to 0.56s (20% reduction from 0.7s) */
+    animation: glitch-jitter 0.56s steps(2, end) infinite;
 }
 #page-transition-overlay.animate::before {
     visibility: visible;
     background: var(--accent-color);
-    animation: glitch-clip-one 0.7s steps(3, end) infinite;
+    /* UPDATED: Reduced animation duration to 0.56s */
+    animation: glitch-clip-one 0.56s steps(3, end) infinite;
 }
 #page-transition-overlay.animate::after {
     visibility: visible;
     background: var(--text-color);
-    animation: glitch-clip-two 0.7s steps(2, end) infinite reverse;
+    /* UPDATED: Reduced animation duration to 0.56s */
+    animation: glitch-clip-two 0.56s steps(2, end) infinite reverse;
 }
 @keyframes glitch-jitter {
     0% { transform: translate(0, 0); }
@@ -159,7 +151,6 @@ h1, h2, h3, h4 {
     color: var(--text-color);
     max-width: 600px;
     margin-top: 1rem;
-    margin-bottom: 2rem; /* Added space for CTA */
 }
 .hero-cta {
     display: inline-block;
@@ -707,7 +698,7 @@ footer {
 /* Works on Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--accent-color) var(--background-color); /* Thumb is accent, Track is background color */
+  scrollbar-color: var(--accent-color) var(--background-color); /* Thumb: Accent, Track: Background color */
 }
 
 /* Works on Chrome, Edge, and Safari */
@@ -776,7 +767,7 @@ footer {
     background-repeat: no-repeat;
 }
 .play-btn.paused {
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23A8FF00"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>');
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23A8FF00"><path d=\"M6 19h4V5H6v14zm8-14v14h4V5h-4z\"/></svg>');
 }
 .progress-bar {
     -webkit-appearance: none;
@@ -824,22 +815,20 @@ footer {
     height: auto;
     display: block;
 }
+/* Single Image Showcase Style */
+.single-image-container {
+    width: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background-color: #000;
+}
+.single-image-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
 
 
 /* Responsive Adjustments */
-@media (max-width: 900px) {
-    .image-gallery-grid {
-        grid-template-columns: 1fr;
-    }
-    .gallery-grid-item.span-2 {
-        grid-column: span 1;
-    }
-    .gallery-grid-item.centered-single img {
-        width: 100%;
-        max-width: 100%; /* Ensure it doesn't exceed 100% on small screens */
-    }
-}
-
 @media (max-width: 768px) {
     main {
         padding: 1rem;
@@ -867,15 +856,23 @@ footer {
     .category-title {
         font-size: 1.5rem;
     }
-    .multi-column {
-        grid-template-columns: 1fr;
+}
+
+/* Adding back specific media queries and elements that were in original but potentially removed from my previous consolidations */
+@media (max-width: 900px) {
+    .image-gallery-grid {
+        grid-template-columns: 1fr; /* Stack columns on smaller screens */
     }
-    .skills-ticker span {
-        font-size: 1rem;
-        margin: 0 1rem;
+    .gallery-grid-item.span-2 {
+        grid-column: span 1; /* Make span-2 items also stack */
     }
-    .video-embed-container {
-        margin: 1.5rem auto 2rem auto;
+    .gallery-grid-item.centered-single { /* This rule needs to be adjusted based on the new single-image-container */
+        /* display: flex; justify-content: center; was removed from original editorial.css but kept in previous style.css versions */
+        /* border: 1px solid rgba(255, 255, 255, 0.2); */
+    }
+    .gallery-grid-item.centered-single img {
+        width: 100%;
+        max-width: 100%; /* Ensure it doesn't exceed 100% on small screens */
     }
 }
 
