@@ -7,10 +7,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // Function to handle outgoing transition before actual navigation
         function handleOutgoingTransition(href) {
             transitionOverlay.classList.add('animate');
-            // Use setTimeout to allow animation to play before navigating
+            // UPDATED: Reduce animation time to 560ms (20% reduction from 700ms)
             setTimeout(() => {
                 window.location.href = href; // Perform actual navigation
-            }, 700); // Match CSS animation duration
+            }, 560); // Match CSS animation duration
         }
 
         // Intercept clicks on internal links
@@ -31,25 +31,20 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Handle popstate event (browser back/forward button clicks)
+        // UPDATED: Handle popstate event (browser back/forward button clicks)
+        // Remove animation when hitting back button for instant navigation.
         window.addEventListener('popstate', function(event) {
-            // popstate fires when history changes (e.g., back/forward buttons)
-            // It might fire on initial page load in some browsers, so check event.state
-            if (event.state && event.state.path) {
-                // If there's a valid state from our pushState, navigate to it with transition
-                handleOutgoingTransition(event.state.path);
-            } else {
-                // This handles cases like navigating back to the very first page in history
-                // or a state not pushed by our script. A simple reload often works best here
-                // to ensure the page state is correctly reconstructed.
-                window.location.reload(); 
+            // When popstate fires, we just want the browser to navigate instantly.
+            // So, simply ensure our animation overlay is removed if it's active.
+            if (transitionOverlay.classList.contains('animate')) {
+                transitionOverlay.classList.remove('animate');
             }
+            // No explicit window.location.href needed here; popstate handles the URL change.
+            // The browser will automatically go to the correct previous page instantly.
         });
 
         // Initial removal of overlay animation if page loaded directly (not via transition).
         // This ensures the animation doesn't play when someone first lands on a page.
-        // It's placed outside DOMContentLoaded to ensure it runs as early as possible.
-        // Also, add a small timeout to ensure CSS is rendered before removing.
         setTimeout(() => {
             if (transitionOverlay.classList.contains('animate')) {
                 transitionOverlay.classList.remove('animate');
