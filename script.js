@@ -1,23 +1,66 @@
 document.addEventListener('DOMContentLoaded', function() {
     
-    // --- Page Transition Logic (Global) ---
+    // --- Page Transition Logic ---
     const transitionOverlay = document.getElementById('page-transition-overlay');
+
     if (transitionOverlay) {
+        // Function to handle outgoing transition before actual navigation
+        function handleOutgoingTransition(href) {
+            transitionOverlay.classList.add('animate');
+            // Use setTimeout to allow animation to play before navigating
+            setTimeout(() => {
+                window.location.href = href; // Perform actual navigation
+            }, 700); // Match CSS animation duration
+        }
+
+        // Intercept clicks on internal links
         document.querySelectorAll('a').forEach(link => {
             const href = link.getAttribute('href');
-            // Apply transition only to internal links that are not hash links or mailto
+            // Only apply to internal links, not hash links, mailto links, or external targets
             if (href && !href.startsWith('#') && !href.startsWith('mailto:') && !link.hasAttribute('target')) {
                 link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    transitionOverlay.classList.add('animate');
-                    setTimeout(() => { window.location.href = href; }, 700); // Match animation duration
+                    e.preventDefault(); // Prevent default browser navigation
+
+                    // Check if current URL is different from target URL to avoid pushing duplicate history states
+                    if (window.location.pathname !== href && window.location.href !== href) {
+                        history.pushState({ path: href }, '', href); // Manually add state to browser history
+                    }
+                    
+                    handleOutgoingTransition(href); // Trigger the transition and then navigate
                 });
             }
         });
-    }
 
-    // --- General Slider Initializer (for Homepage Featured Projects and potentially Modals) ---
-    // Using a Map to keep track of active intervals for multiple auto-playing sliders
+        // Handle popstate event (browser back/forward button clicks)
+        window.addEventListener('popstate', function(event) {
+            // popstate fires when history changes (e.g., back/forward buttons)
+            // It might fire on initial page load in some browsers, so check event.state
+            if (event.state && event.state.path) {
+                // If there's a valid state from our pushState, navigate to it with transition
+                handleOutgoingTransition(event.state.path);
+            } else {
+                // This handles cases like navigating back to the very first page in history
+                // or a state not pushed by our script. A simple reload often works best here
+                // to ensure the page state is correctly reconstructed.
+                window.location.reload(); 
+            }
+        });
+
+        // Initial removal of overlay animation if page loaded directly (not via transition).
+        // This ensures the animation doesn't play when someone first lands on a page.
+        // It's placed outside DOMContentLoaded to ensure it runs as early as possible.
+        // Also, add a small timeout to ensure CSS is rendered before removing.
+        setTimeout(() => {
+            if (transitionOverlay.classList.contains('animate')) {
+                transitionOverlay.classList.remove('animate');
+            }
+        }, 100); // Small delay to allow initial rendering
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // --- General Slider Initializer ---
     const activeSliders = new Map();
 
     function initializeSlider(sliderElement, isAutoPlaying) {
@@ -83,9 +126,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     // --- Modal Logic (if you decide to use modals for image pop-ups again) ---
-    // Your previous code had modal logic, but no modals in the provided HTML.
-    // I'm keeping this structure here in case you re-introduce modals,
-    // for example, for enlarged project images on category pages.
     const modalTriggers = document.querySelectorAll('[data-modal-target]');
     const body = document.querySelector('body');
 
@@ -151,14 +191,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // --- Custom Video Player Logic ---
+    // --- Custom Video Player Logic (Remains for any future self-hosted videos) ---
     const videoPlayer = document.querySelector('.custom-video-player');
     const playPauseBtn = document.getElementById('play-pause-btn');
     const progressBar = document.getElementById('progress-bar');
     const timeDisplay = document.getElementById('time-display');
 
     if (videoPlayer && playPauseBtn && progressBar && timeDisplay) {
-        // Play/Pause functionality
         function togglePlay() {
             if (videoPlayer.paused || videoPlayer.ended) {
                 videoPlayer.play();
@@ -168,16 +207,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         function updatePlayButton() {
-            // Toggle 'paused' class to change button icon
             playPauseBtn.classList.toggle('paused', !videoPlayer.paused);
         }
 
         playPauseBtn.addEventListener('click', togglePlay);
-        videoPlayer.addEventListener('click', togglePlay); // Click video to play/pause
+        videoPlayer.addEventListener('click', togglePlay);
         videoPlayer.addEventListener('play', updatePlayButton);
         videoPlayer.addEventListener('pause', updatePlayButton);
 
-        // Progress bar and time display functionality
         function formatTime(timeInSeconds) {
             const minutes = Math.floor(timeInSeconds / 60);
             const seconds = Math.floor(timeInSeconds % 60);
@@ -185,29 +222,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         function updateProgress() {
-            if (videoPlayer.duration) { // Ensure duration is available
+            if (videoPlayer.duration) {
                 progressBar.value = (videoPlayer.currentTime / videoPlayer.duration) * 100;
                 timeDisplay.textContent = `${formatTime(videoPlayer.currentTime)} / ${formatTime(videoPlayer.duration)}`;
             } else {
-                timeDisplay.textContent = `00:00 / 00:00`; // Default if duration not loaded yet
+                timeDisplay.textContent = `00:00 / 00:00`;
             }
         }
 
         videoPlayer.addEventListener('timeupdate', updateProgress);
         
-        // Allow seeking by dragging progress bar
         progressBar.addEventListener('input', () => {
             if (videoPlayer.duration) {
                 videoPlayer.currentTime = (progressBar.value / 100) * videoPlayer.duration;
             }
         });
 
-        // Initialize time display on metadata load
         videoPlayer.addEventListener('loadedmetadata', updateProgress);
     }
-
-    // For carousel containers on social media page (or similar)
-    // You had a specific CSS for this, but no direct JS for its behavior
-    // If you need specific carousel navigation beyond simple overflow scroll,
-    // you'd add more JS here. For now, it relies on CSS scroll-snap.
 });
