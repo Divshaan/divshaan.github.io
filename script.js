@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-    
     // --- Page Transition Logic ---
     const transitionOverlay = document.getElementById('page-transition-overlay');
 
@@ -7,10 +6,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // Function to handle outgoing transition before actual navigation
         function handleOutgoingTransition(href) {
             transitionOverlay.classList.add('animate');
-            // UPDATED: Reduce animation time to 560ms (20% reduction from 700ms)
+            // UPDATED: Animation time set to 580ms
             setTimeout(() => {
                 window.location.href = href; // Perform actual navigation
-            }, 560); // Match CSS animation duration
+            }, 580); // Match CSS animation duration
         }
 
         // Intercept clicks on internal links
@@ -20,47 +19,37 @@ document.addEventListener('DOMContentLoaded', function() {
             if (href && !href.startsWith('#') && !href.startsWith('mailto:') && !link.hasAttribute('target')) {
                 link.addEventListener('click', function(e) {
                     e.preventDefault(); // Prevent default browser navigation
-
-                    // Check if current URL is different from target URL to avoid pushing duplicate history states
-                    if (window.location.pathname !== href && window.location.href !== href) {
-                        history.pushState({ path: href }, '', href); // Manually add state to browser history
-                    }
                     
                     handleOutgoingTransition(href); // Trigger the transition and then navigate
                 });
             }
         });
 
-        // UPDATED: Handle popstate event (browser back/forward button clicks)
-        // Remove animation when hitting back button for instant navigation.
+        // Handle browser back/forward button clicks (popstate event)
         window.addEventListener('popstate', function(event) {
-            // When popstate fires, we just want the browser to navigate instantly.
-            // So, simply ensure our animation overlay is removed if it's active.
             if (transitionOverlay.classList.contains('animate')) {
                 transitionOverlay.classList.remove('animate');
             }
-            // No explicit window.location.href needed here; popstate handles the URL change.
-            // The browser will automatically go to the correct previous page instantly.
+            window.location.reload(); 
         });
 
         // Initial removal of overlay animation if page loaded directly (not via transition).
-        // This ensures the animation doesn't play when someone first lands on a page.
         setTimeout(() => {
-            if (transitionOverlay.classList.contains('animate')) {
+            if (transitionOverlay) {
                 transitionOverlay.classList.remove('animate');
             }
-        }, 100); // Small delay to allow initial rendering
+        }, 50); // Very short delay
     }
 });
 
+// --- Code below this line remains unchanged from previous versions ---
+// --- General Slider Initializer ---
 document.addEventListener('DOMContentLoaded', function() {
-    
-    // --- General Slider Initializer ---
     const activeSliders = new Map();
 
     function initializeSlider(sliderElement, isAutoPlaying) {
         const sliderId = sliderElement.dataset.slider;
-        if (!sliderId) return; // Slider needs a data-slider ID
+        if (!sliderId) return; 
 
         const container = sliderElement.querySelector('.slider-container') || sliderElement;
         const slides = container.querySelectorAll('.slide');
@@ -69,7 +58,6 @@ document.addEventListener('DOMContentLoaded', function() {
         let slideIndex = 0;
 
         if (slides.length <= 1) {
-            // Hide navigation if there's only one slide
             if(prev) prev.style.display = 'none';
             if(next) next.style.display = 'none';
             return;
@@ -77,13 +65,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
         function showSlide(n) {
             slides.forEach(slide => slide.classList.remove('active'));
-            slideIndex = (n + slides.length) % slides.length; // Loop around
+            slideIndex = (n + slides.length) % slides.length; 
             slides[slideIndex].classList.add('active');
         }
 
         const startSlider = () => {
             if (isAutoPlaying) {
-                stopSlider(); // Ensure only one interval runs per slider
+                stopSlider(); 
                 const interval = setInterval(() => showSlide(++slideIndex), 3000);
                 activeSliders.set(sliderId, interval);
             }
@@ -96,31 +84,26 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
 
-        // Add event listeners for manual navigation (if present)
         if (prev && next) {
             prev.addEventListener('click', (e) => { e.stopPropagation(); showSlide(--slideIndex); stopSlider(); });
             next.addEventListener('click', (e) => { e.stopPropagation(); showSlide(++slideIndex); stopSlider(); });
         }
         
-        // Auto-play / hover pause logic
         if (isAutoPlaying) {
             container.addEventListener('mouseenter', stopSlider);
             container.addEventListener('mouseleave', startSlider);
         }
 
-        // Initial display and start
         showSlide(slideIndex);
         startSlider();
     }
 
-    // --- Initialize Sliders on Page Load (For Homepage Featured Projects) ---
     document.querySelectorAll('.project-card[data-slider]').forEach(slider => {
-        // Autoplay is ON for homepage sliders
         initializeSlider(slider, true); 
     });
 
 
-    // --- Modal Logic (if you decide to use modals for image pop-ups again) ---
+    // --- Modal Logic ---
     const modalTriggers = document.querySelectorAll('[data-modal-target]');
     const body = document.querySelector('body');
 
@@ -129,11 +112,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const modal = document.getElementById(trigger.dataset.modalTarget);
             if(modal) {
                 modal.classList.add('active');
-                body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
-                // If there's a slider inside the modal, initialize it (no autoplay)
+                body.style.overflow = 'hidden'; 
                 const modalSliderElement = modal.querySelector('[data-slider]');
                 if (modalSliderElement) {
-                    initializeSlider(modalSliderElement, false); // Autoplay is OFF for modal sliders
+                    initializeSlider(modalSliderElement, false); 
                 }
             }
         });
@@ -142,7 +124,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function closeModal() {
         const activeModal = document.querySelector('.modal.active');
         if(activeModal) {
-            // Stop any sliders that were initialized in the modal
             const modalSliderElement = activeModal.querySelector('[data-slider]');
             if (modalSliderElement) {
                 const sliderId = modalSliderElement.dataset.slider;
@@ -152,7 +133,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             activeModal.classList.remove('active');
-            body.style.overflow = 'auto'; // Re-enable scrolling
+            body.style.overflow = 'auto'; 
         }
     }
 
@@ -172,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // --- Smooth scroll for on-page links (e.g., to #work, #about) ---
+    // --- Smooth scroll for on-page links ---
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
             e.preventDefault();
@@ -186,7 +167,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // --- Custom Video Player Logic (Remains for any future self-hosted videos) ---
+    // --- Custom Video Player Logic ---
     const videoPlayer = document.querySelector('.custom-video-player');
     const playPauseBtn = document.getElementById('play-pause-btn');
     const progressBar = document.getElementById('progress-bar');
