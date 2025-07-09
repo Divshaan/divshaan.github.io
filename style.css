@@ -14,7 +14,7 @@
     width: 100%;
     height: 100vh;
     background-color: var(--background-color);
-    z-index: 9999;
+    z-index: 9999; /* Main overlay z-index */
     opacity: 0;
     pointer-events: none;
     transform: translate3d(0,0,0); /* Hardware acceleration */
@@ -22,20 +22,36 @@
 #page-transition-overlay.animate {
     opacity: 1;
     pointer-events: all;
-    /* UPDATED: Reduced animation duration to 0.56s (20% reduction from 0.7s) */
-    animation: glitch-jitter 0.56s steps(2, end) infinite;
+    /* Duration is 0.58s */
+    animation: glitch-jitter 0.58s steps(2, end);
 }
 #page-transition-overlay.animate::before {
     visibility: visible;
     background: var(--accent-color);
-    /* UPDATED: Reduced animation duration to 0.56s */
-    animation: glitch-clip-one 0.56s steps(3, end) infinite;
+    content: ''; /* Ensure content is present for pseudo-element */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000; /* Ensure it's on top */
+    animation: glitch-clip-one 0.58s steps(3, end); /* Main green animation */
 }
 #page-transition-overlay.animate::after {
-    visibility: visible;
-    background: var(--text-color);
-    /* UPDATED: Reduced animation duration to 0.56s */
-    animation: glitch-clip-two 0.56s steps(2, end) infinite reverse;
+    /* UPDATED: Make this element invisible when animation is active to remove white flash */
+    visibility: hidden; /* Ensure it's not visible */
+    opacity: 0; /* Also set opacity to 0 */
+    animation: none; /* Explicitly remove any animation from this element */
+    
+    /* Keep base properties in case they are useful for other states, but will not be visible during animation */
+    content: ''; 
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--text-color); /* Its original white background */
+    z-index: 10001; /* Its original z-index */
 }
 @keyframes glitch-jitter {
     0% { transform: translate(0, 0); }
@@ -329,10 +345,6 @@ h1, h2, h3, h4 {
 .work-entry ul {
     list-style: none;
     padding-left: 1.5rem;
-}
-.work-entry ul li {
-    margin-bottom: 0.75rem;
-    position: relative;
 }
 .work-entry ul li::before {
     content: '■';
