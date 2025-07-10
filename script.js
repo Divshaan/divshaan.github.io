@@ -20,11 +20,17 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        window.addEventListener('popstate', function(event) {
-            if (transitionOverlay.classList.contains('animate')) {
-                transitionOverlay.classList.remove('animate');
+        // UPDATED Popstate event listener
+        window.addEventListener('popstate', function() {
+            const previousPage = document.referrer;
+            if (previousPage && previousPage.includes(window.location.hostname)) {
+                transitionOverlay.classList.add('animate');
+                setTimeout(() => {
+                    window.location.href = document.referrer;
+                }, 580);
+            } else {
+                window.history.back();
             }
-            window.location.reload(); 
         });
 
         setTimeout(() => {
