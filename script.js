@@ -3,29 +3,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const transitionOverlay = document.getElementById('page-transition-overlay');
 
     if (transitionOverlay) {
-        // Function to handle outgoing transition before actual navigation
         function handleOutgoingTransition(href) {
             transitionOverlay.classList.add('animate');
-            // UPDATED: Animation time set to 580ms
             setTimeout(() => {
-                window.location.href = href; // Perform actual navigation
-            }, 580); // Match CSS animation duration
+                window.location.href = href;
+            }, 580);
         }
 
-        // Intercept clicks on internal links
         document.querySelectorAll('a').forEach(link => {
             const href = link.getAttribute('href');
-            // Only apply to internal links, not hash links, mailto links, or external targets
             if (href && !href.startsWith('#') && !href.startsWith('mailto:') && !link.hasAttribute('target')) {
                 link.addEventListener('click', function(e) {
-                    e.preventDefault(); // Prevent default browser navigation
-                    
-                    handleOutgoingTransition(href); // Trigger the transition and then navigate
+                    e.preventDefault();
+                    handleOutgoingTransition(href);
                 });
             }
         });
 
-        // Handle browser back/forward button clicks (popstate event)
         window.addEventListener('popstate', function(event) {
             if (transitionOverlay.classList.contains('animate')) {
                 transitionOverlay.classList.remove('animate');
@@ -33,18 +27,14 @@ document.addEventListener('DOMContentLoaded', function() {
             window.location.reload(); 
         });
 
-        // Initial removal of overlay animation if page loaded directly (not via transition).
         setTimeout(() => {
             if (transitionOverlay) {
                 transitionOverlay.classList.remove('animate');
             }
-        }, 50); // Very short delay
+        }, 50);
     }
-});
 
-// --- Code below this line remains unchanged from previous versions ---
-// --- General Slider Initializer ---
-document.addEventListener('DOMContentLoaded', function() {
+    // --- General Slider Initializer ---
     const activeSliders = new Map();
 
     function initializeSlider(sliderElement, isAutoPlaying) {
@@ -101,7 +91,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.project-card[data-slider]').forEach(slider => {
         initializeSlider(slider, true); 
     });
-
 
     // --- Modal Logic ---
     const modalTriggers = document.querySelectorAll('[data-modal-target]');
