@@ -3,36 +3,36 @@ document.addEventListener('DOMContentLoaded', function() {
     const transitionOverlay = document.getElementById('page-transition-overlay');
 
     if (transitionOverlay) {
+        // Function to handle outgoing transition before actual navigation
         function handleOutgoingTransition(href) {
             transitionOverlay.classList.add('animate');
             setTimeout(() => {
-                window.location.href = href;
-            }, 580);
+                window.location.href = href; // Perform actual navigation
+            }, 580); // Match CSS animation duration
         }
 
+        // Intercept clicks on internal links
         document.querySelectorAll('a').forEach(link => {
             const href = link.getAttribute('href');
+            // Only apply to internal links, not hash links, mailto links, or external targets
             if (href && !href.startsWith('#') && !href.startsWith('mailto:') && !link.hasAttribute('target')) {
                 link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    handleOutgoingTransition(href);
+                    e.preventDefault(); // Prevent default browser navigation
+                    handleOutgoingTransition(href); // Trigger the transition and then navigate
                 });
             }
         });
 
-        // UPDATED Popstate event listener
-        window.addEventListener('popstate', function() {
-            const previousPage = document.referrer;
-            if (previousPage && previousPage.includes(window.location.hostname)) {
-                transitionOverlay.classList.add('animate');
-                setTimeout(() => {
-                    window.location.href = document.referrer;
-                }, 580);
-            } else {
-                window.history.back();
+        // Use 'pageshow' to handle back/forward cache restoration
+        window.addEventListener('pageshow', function(event) {
+            // event.persisted is true if the page was loaded from the back-forward cache
+            if (event.persisted) {
+                // Instantly remove the animation class to un-stick the overlay
+                transitionOverlay.classList.remove('animate');
             }
         });
 
+        // Initial removal of overlay animation for direct page loads
         setTimeout(() => {
             if (transitionOverlay) {
                 transitionOverlay.classList.remove('animate');
