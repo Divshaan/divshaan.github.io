@@ -971,3 +971,43 @@ footer {
     height: 100%;
     border: none; /* Ensure no extra border on the iframe itself */
 }
+/* 404 Error Page Styles */
+.error-page {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+}
+
+.error-page .error-code {
+    font-size: 10rem;
+    color: var(--accent-color);
+    line-height: 1;
+    font-family: var(--font-secondary);
+}
+
+.error-page h2 {
+    font-size: 2.5rem;
+    color: var(--text-color);
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+}
+
+.error-page .error-message {
+    font-size: 1.2rem;
+    max-width: 500px;
+    margin-bottom: 2.5rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Responsive adjustments for error page */
+@media (max-width: 768px) {
+    .error-page .error-code {
+        font-size: 8rem;
+    }
+    .error-page h2 {
+        font-size: 2rem;
+    }
+}
