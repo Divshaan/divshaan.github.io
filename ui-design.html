@@ -9,6 +9,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* This rule targets the container of the three images */
+        .image-gallery-grid > .gallery-grid-item.span-2 {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem; /* Adjust this value to increase or decrease the space */
+        }
+    </style>
 </head>
 <body>
     <div id="page-transition-overlay"></div>
@@ -31,9 +39,9 @@
                 <p class="project-description">A promotional poster designed for the Gamescom 2024 event in Cologne. The design focuses on a dynamic, high-energy visual with a clear call-to-action to drive ticket sales and generate excitement for the world's largest gaming event.</p>
                 <div class="image-gallery-grid">
                     <div class="gallery-grid-item span-2">
-                         <div class="gallery-grid-item span-2"><img src="./web1.png" alt="Gamescom Project Image 1"></div>
-                         <div class="gallery-grid-item span-2"><img src="./webm.png" alt="Gamescom Project Image 2"></div>
-                         <div class="gallery-grid-item span-2"><img src="./webm2.png" alt="Gamescom Project Image 3"></div>
+                         <div class="gallery-grid-item span-2"><img src="https://placehold.co/800x450/1a1a1a/ffffff?text=Gamescom+1" alt="Gamescom Project Image 1"></div>
+                         <div class="gallery-grid-item span-2"><img src="https://placehold.co/800x450/2a2a2a/ffffff?text=Gamescom+2" alt="Gamescom Project Image 2"></div>
+                         <div class="gallery-grid-item span-2"><img src="https://placehold.co/800x450/3a3a3a/ffffff?text=Gamescom+3" alt="Gamescom Project Image 3"></div>
                     </div>
                 </div>
             </div>
@@ -52,6 +60,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
-
-
