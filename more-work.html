@@ -9,6 +9,23 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Styles for the YouTube iframe background */
+        .work-card .youtube-bg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 150%; /* Overscale to ensure no black bars */
+            height: 150%;
+            transform: translate(-50%, -50%);
+            pointer-events: none; /* Allows the link to be clicked */
+            filter: grayscale(100%);
+            transition: filter 0.4s ease, transform 0.4s ease;
+        }
+        .work-card:hover .youtube-bg {
+            filter: grayscale(0%);
+        }
+    </style>
 </head>
 <body>
     <div id="page-transition-overlay"></div>
@@ -86,11 +103,4 @@
     <script src="script.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
 
