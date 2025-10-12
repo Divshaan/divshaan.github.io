@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 Not Found - Divshaan Singh Brar</title>
+    <title>404 Page Not Found - Divshaan Singh Brar</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,7 +12,7 @@
 <body>
     <div id="page-transition-overlay"></div>
     <header class="main-header">
-        <div class="logo">DSB</div>
+        <a href="index.html" class="logo">DSB</a>
         <nav>
             <a href="index.html">HOME</a>
             <a href="work.html">WORK</a>
@@ -22,11 +22,23 @@
     </header>
 
     <main>
-        <section class="page-section error-page">
-            <h1 class="error-code">404</h1>
-            <h2>&lt;Page Not Found /&gt;</h2>
-            <p class="error-message">Sorry, the page you are looking for seems to have been moved, deleted, or never existed.</p>
-            <a href="index.html" class="hero-cta">GO TO HOMEPAGE</a>
+        <section class="page-section">
+            <div class="error-page">
+                <div class="error-code" data-text="404">404</div>
+                <h2>&lt;Lost in the Static? /&gt;</h2>
+                <p class="error-message">Looks like you've found a glitch in the matrix. While you're here, try to dodge the falling fragments.</p>
+                
+                <!-- New Game Elements -->
+                <div id="game-container">
+                    <canvas id="glitch-game"></canvas>
+                    <div id="game-ui">
+                        <p>Score: <span id="score">0</span></p>
+                        <p class="game-instructions">Use Arrow Keys or Swipe to Move</p>
+                    </div>
+                </div>
+
+                <a href="index.html" class="contact-button">Go Back to Homepage</a>
+            </div>
         </section>
     </main>
 
@@ -42,3 +54,4 @@
     <script src="script.js"></script>
 </body>
 </html>
+

@@ -162,53 +162,159 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // --- Custom Video Player Logic ---
-    const videoPlayer = document.querySelector('.custom-video-player');
-    const playPauseBtn = document.getElementById('play-pause-btn');
-    const progressBar = document.getElementById('progress-bar');
-    const timeDisplay = document.getElementById('time-display');
-
-    if (videoPlayer && playPauseBtn && progressBar && timeDisplay) {
-        function togglePlay() {
-            if (videoPlayer.paused || videoPlayer.ended) {
-                videoPlayer.play();
-            } else {
-                videoPlayer.pause();
-            }
-        }
-
-        function updatePlayButton() {
-            playPauseBtn.classList.toggle('paused', !videoPlayer.paused);
-        }
-
-        playPauseBtn.addEventListener('click', togglePlay);
-        videoPlayer.addEventListener('click', togglePlay);
-        videoPlayer.addEventListener('play', updatePlayButton);
-        videoPlayer.addEventListener('pause', updatePlayButton);
-
-        function formatTime(timeInSeconds) {
-            const minutes = Math.floor(timeInSeconds / 60);
-            const seconds = Math.floor(timeInSeconds % 60);
-            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        }
-
-        function updateProgress() {
-            if (videoPlayer.duration) {
-                progressBar.value = (videoPlayer.currentTime / videoPlayer.duration) * 100;
-                timeDisplay.textContent = `${formatTime(videoPlayer.currentTime)} / ${formatTime(videoPlayer.duration)}`;
-            } else {
-                timeDisplay.textContent = `00:00 / 00:00`;
-            }
-        }
-
-        videoPlayer.addEventListener('timeupdate', updateProgress);
+    // --- 404 Page Glitch Dodger Game Logic ---
+    const gameCanvas = document.getElementById('glitch-game');
+    if (gameCanvas) {
+        const ctx = gameCanvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
         
-        progressBar.addEventListener('input', () => {
-            if (videoPlayer.duration) {
-                videoPlayer.currentTime = (progressBar.value / 100) * videoPlayer.duration;
-            }
-        });
+        let score = 0;
+        let gameOver = false;
+        
+        // Player
+        const player = {
+            x: gameCanvas.width / 2 - 15,
+            y: gameCanvas.height - 30,
+            width: 30,
+            height: 10,
+            speed: 8,
+            dx: 0
+        };
+        
+        // Enemies (Glitches)
+        const enemies = [];
+        const enemyProto = {
+            width: 20,
+            height: 20,
+            speed: 3
+        };
 
-        videoPlayer.addEventListener('loadedmetadata', updateProgress);
+        function createEnemy() {
+            enemies.push({
+                x: Math.random() * (gameCanvas.width - enemyProto.width),
+                y: -enemyProto.height,
+                width: enemyProto.width,
+                height: enemyProto.height,
+                speed: Math.random() * 2 + enemyProto.speed
+            });
+        }
+        
+        function drawPlayer() {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+        }
+
+        function drawEnemies() {
+            ctx.fillStyle = '#A8FF00';
+            enemies.forEach(enemy => {
+                ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+            });
+        }
+        
+        function update() {
+            if(gameOver) return;
+
+            ctx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+            
+            // Move player
+            player.x += player.dx;
+
+            // Wall detection for player
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > gameCanvas.width) player.x = gameCanvas.width - player.width;
+
+            drawPlayer();
+
+            // Update and draw enemies
+            enemies.forEach((enemy, index) => {
+                enemy.y += enemy.speed;
+                // Collision detection
+                if (
+                    player.x < enemy.x + enemy.width &&
+                    player.x + player.width > enemy.x &&
+                    player.y < enemy.y + enemy.height &&
+                    player.y + player.height > enemy.y
+                ) {
+                   endGame();
+                }
+
+                // If enemy is off screen
+                if (enemy.y > gameCanvas.height) {
+                    enemies.splice(index, 1);
+                    score++;
+                    scoreEl.innerText = score;
+                    createEnemy();
+                }
+            });
+
+            drawEnemies();
+            
+            requestAnimationFrame(update);
+        }
+        
+        function moveRight() { player.dx = player.speed; }
+        function moveLeft() { player.dx = -player.speed; }
+        function stopMove() { player.dx = 0; }
+
+        function keyDown(e) {
+            if (e.key === 'ArrowRight' || e.key === 'd') moveRight();
+            else if (e.key === 'ArrowLeft' || e.key === 'a') moveLeft();
+        }
+
+        function keyUp(e) {
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'ArrowLeft' || e.key === 'a') stopMove();
+        }
+
+        // Touch controls
+        let touchStartX = 0;
+        function touchStart(e) {
+            touchStartX = e.touches[0].clientX;
+        }
+        function touchMove(e) {
+            const touchX = e.touches[0].clientX;
+            const diff = touchX - touchStartX;
+            if (diff > 5) moveRight();
+            else if (diff < -5) moveLeft();
+            else stopMove();
+        }
+        function touchEnd() {
+            stopMove();
+        }
+
+        function startGame() {
+            score = 0;
+            scoreEl.innerText = 0;
+            enemies.length = 0;
+            player.x = gameCanvas.width / 2 - player.width / 2;
+            gameOver = false;
+            for(let i=0; i<3; i++) {
+                setTimeout(createEnemy, i * 1000);
+            }
+            update();
+        }
+
+        function endGame() {
+            gameOver = true;
+            setTimeout(startGame, 1000); // Restart after 1 second
+        }
+
+        // Event Listeners
+        document.addEventListener('keydown', keyDown);
+        document.addEventListener('keyup', keyUp);
+        gameCanvas.addEventListener('touchstart', touchStart);
+        gameCanvas.addEventListener('touchmove', touchMove);
+        gameCanvas.addEventListener('touchend', touchEnd);
+
+        // Set initial canvas size
+        function resizeCanvas() {
+            const container = document.getElementById('game-container');
+            gameCanvas.width = container.clientWidth;
+            gameCanvas.height = container.clientWidth * (3/4); // 4:3 aspect ratio
+            player.y = gameCanvas.height - 30; // Reset player y on resize
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        startGame();
     }
 });

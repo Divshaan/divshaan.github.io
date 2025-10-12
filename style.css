@@ -109,6 +109,7 @@ body {
     font-weight: 700;
     font-size: 1.5rem;
     color: var(--accent-color);
+    text-decoration: none;
 }
 nav a {
     color: var(--text-color);
@@ -152,9 +153,54 @@ h1, h2, h3, h4 {
     align-items: center;
     text-align: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative; /* Added to contain the animation */
+    overflow: hidden;   /* Ensures animation doesn't bleed out */
 }
+
+/* Base noise layer */
+.hero::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* A subtle, repeating noise pattern created with gradients */
+    background-image: 
+        radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 0),
+        radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 0);
+    background-size: 4px 4px;
+    background-position: 0 0, 2px 2px;
+    animation: noise 2s steps(1) infinite;
+    z-index: 0; /* Sits behind the text but on top of the background color */
+}
+
+/* New: Accent color pixel animation layer */
+.hero::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: radial-gradient(var(--accent-color) 1px, transparent 0);
+    background-size: 40px 40px; /* Sparsely placed pixels */
+    opacity: 0;
+    animation: accent-pixels 5s steps(1) infinite;
+    z-index: 0;
+}
+
+
+/* Ensure hero text is on top of the animation */
+.hero h1,
+.hero .subtitle,
+.hero .hero-cta {
+    position: relative;
+    z-index: 1;
+}
+
 .hero h1 {
-    font-size: 5vw;
+    font-size: 4.5vw;
     color: var(--text-color);
     margin: 0;
 }
@@ -163,6 +209,7 @@ h1, h2, h3, h4 {
     color: var(--text-color);
     max-width: 600px;
     margin-top: 1rem;
+    margin-bottom: 2rem;
 }
 .hero-cta {
     display: inline-block;
@@ -285,24 +332,30 @@ h1, h2, h3, h4 {
     background-color: rgba(0,0,0,0.8);
 }
 
-/* About Section on Homepage */
+/* About Section on Homepage & About Page */
 .about-section {
     padding: 6rem 0;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 .about-content {
     display: grid;
-    grid-template-columns: 1fr 2fr;
+    grid-template-columns: 1fr 2fr; /* Photo first (1fr), then text (2fr) */
     gap: 3rem;
     align-items: center;
+    margin-bottom: 4rem;
 }
 .about-photo img {
     width: 100%;
-    max-width: 350px;
+    max-width: 250px; /* Consistent smaller size */
     height: auto;
     filter: grayscale(100%);
     border: 1px solid var(--accent-color);
-    display: block; 
+    display: block;
+    margin: 0 auto;
+    transition: filter 0.4s ease;
+}
+.about-photo:hover img {
+    filter: grayscale(0%);
 }
 .about-text h3 {
     font-size: 1.8rem;
@@ -338,6 +391,9 @@ h1, h2, h3, h4 {
     color: rgba(255, 255, 255, 0.6);
     margin-bottom: 1rem;
 }
+.work-entry p {
+    margin-bottom: 1rem;
+}
 .work-entry ul {
     list-style: none;
     padding-left: 1.5rem;
@@ -362,6 +418,26 @@ h1, h2, h3, h4 {
 }
 .skills-grid .skill-category {
     text-align: left;
+}
+
+/* Fun Facts Section Styles */
+.fun-facts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+.fact-card {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+.fact-card:hover {
+    border-color: var(--accent-color);
+    transform: translateY(-5px);
+}
+.fact-card h4 {
+    color: var(--accent-color);
+    margin-bottom: 0.5rem;
 }
 
 .multi-column {
@@ -408,6 +484,30 @@ h1, h2, h3, h4 {
 @keyframes scroll {
     from { transform: translateX(0); }
     to { transform: translateX(-50%); }
+}
+
+/* Keyframes for the hero background animation */
+@keyframes noise {
+    0% { background-position: 0 0, 2px 2px; }
+    25% { background-position: 4px 4px, 6px 6px; }
+    50% { background-position: 2px 6px, 4px 2px; }
+    75% { background-position: 6px 2px, 2px 6px; }
+    100% { background-position: 4px 4px, 6px 6px; }
+}
+
+/* New: Keyframes for the accent pixel animation */
+@keyframes accent-pixels {
+    0%   { opacity: 0; }
+    10%  { opacity: 0.4; background-position: 5px 10px; }
+    20%  { opacity: 0.2; background-position: 10px 20px; }
+    30%  { opacity: 0.5; background-position: 15px 5px; }
+    40%  { opacity: 0.1; background-position: 20px 15px; }
+    50%  { opacity: 0.3; background-position: 25px 25px; }
+    60%  { opacity: 0.5; background-position: 10px 10px; }
+    70%  { opacity: 0.2; background-position: 5px 20px; }
+    80%  { opacity: 0.4; background-position: 15px 15px; }
+    90%  { opacity: 0.1; background-position: 25px 5px; }
+    100% { opacity: 0; }
 }
 
 /* Contact Section Styles */
@@ -521,7 +621,7 @@ footer {
     color: var(--accent-color);
 }
 
-/* Work Category Page Styles */
+/* Work Category List Styles (for more-work.html) */
 .category-list {
     border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
@@ -547,6 +647,71 @@ footer {
     font-family: var(--font-secondary);
     font-size: 1.2rem;
 }
+
+/* NEW Work Grid Styles */
+.work-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+.work-card {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    text-decoration: none;
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+.work-card-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.4s ease, filter 0.4s ease;
+    filter: grayscale(100%);
+}
+.work-card-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    transition: background-color 0.4s ease;
+}
+.work-card-content {
+    position: relative;
+    z-index: 2;
+    padding: 1rem;
+}
+.work-card h3 {
+    font-size: 1.8rem;
+    transition: color 0.3s ease;
+}
+.work-card p {
+    font-size: 1rem;
+    opacity: 0.8;
+}
+.work-card:hover .work-card-bg {
+    transform: scale(1.05);
+    filter: grayscale(0%);
+}
+.work-card:hover .work-card-overlay {
+    background-color: rgba(0, 0, 0, 0.4);
+}
+.work-card:hover h3 {
+    color: var(--accent-color);
+}
+
 
 /* Editorial Detail Page Styles */
 .project-detail-showcase {
@@ -834,6 +999,7 @@ footer {
     }
     .about-photo {
         margin: 0 auto 2rem auto;
+        order: -1; /* Puts photo on top on mobile */
     }
     .hero h1 {
         font-size: 10vw;
@@ -850,6 +1016,9 @@ footer {
     }
     .category-title {
         font-size: 1.5rem;
+    }
+    .work-grid {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -1011,3 +1180,4 @@ footer {
         font-size: 2rem;
     }
 }
+
