@@ -339,16 +339,16 @@ h1, h2, h3, h4 {
 }
 .about-content {
     display: grid;
-    grid-template-columns: 1fr 2fr; /* Photo first (1fr), then text (2fr) */
+    grid-template-columns: 1fr 1.5fr; /* Refined balance for photo and text */
     gap: 3rem;
     align-items: center;
 }
 .about-photo {
-    justify-self: center; /* Center the photo container in its grid cell */
+    justify-self: center; 
 }
 .about-photo img {
     width: 100%;
-    max-width: 300px; /* Increased size for better balance */
+    max-width: 350px; /* Adjusted size for better proportion */
     height: auto;
     filter: grayscale(100%);
     border: 1px solid var(--accent-color);
@@ -369,7 +369,7 @@ h1, h2, h3, h4 {
 
 /* Detailed About Page Styles */
 .about-detailed .about-content {
-    margin-bottom: 4rem; /* Add margin to the top about section on this page only */
+    margin-bottom: 4rem; 
 }
 .about-section-block {
     margin-bottom: 4rem;
