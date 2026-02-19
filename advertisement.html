@@ -121,7 +121,7 @@
             letter-spacing: 0.14em;
             text-transform: uppercase;
             opacity: 0.45;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             display: block;
         }
         model-viewer {
@@ -132,6 +132,31 @@
             --poster-color: #0e0e0e;
             --progress-bar-color: #A8FF00;
             --progress-mask: #0e0e0e;
+        }
+        .model-switcher {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .model-switcher-btn {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.62rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.15);
+            color: rgba(255,255,255,0.4);
+            padding: 6px 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .model-switcher-btn:hover {
+            border-color: rgba(255,255,255,0.4);
+            color: rgba(255,255,255,0.8);
+        }
+        .model-switcher-btn.active {
+            border-color: #A8FF00;
+            color: #A8FF00;
         }
         .model-hint {
             font-family: 'Roboto Mono', monospace;
@@ -218,9 +243,15 @@
 
                 <!-- 3D Model Viewer -->
                 <div class="model-viewer-wrapper">
-                    <span class="model-viewer-label">3D Model</span>
+                    <span class="model-viewer-label">3D Models</span>
+                    <div class="model-switcher">
+                        <button class="model-switcher-btn active" onclick="switchModel(this, '3d1.glb')">Model 01</button>
+                        <button class="model-switcher-btn" onclick="switchModel(this, '3d2.glb')">Model 02</button>
+                        <button class="model-switcher-btn" onclick="switchModel(this, '3d3.glb')">Model 03</button>
+                    </div>
                     <model-viewer
-                        src="./3d.glb"
+                        id="sap-model-viewer"
+                        src="./3d1.glb"
                         alt="Sapporo The Sabbatical 3D Model"
                         camera-controls
                         auto-rotate
@@ -234,6 +265,14 @@
                     ></model-viewer>
                     <span class="model-hint">Drag &nbsp;·&nbsp; rotate &nbsp;&nbsp;|&nbsp;&nbsp; Pinch / scroll &nbsp;·&nbsp; zoom &nbsp;&nbsp;|&nbsp;&nbsp; Right drag &nbsp;·&nbsp; pan</span>
                 </div>
+
+                <script>
+                    function switchModel(btn, src) {
+                        document.querySelectorAll('.model-switcher-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        document.getElementById('sap-model-viewer').src = './' + src;
+                    }
+                </script>
             </div>
 
             <!-- Sapporo Info Modal -->
