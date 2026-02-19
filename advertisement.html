@@ -114,9 +114,7 @@
         .sap-modal-tile p { margin: 0; font-size: 0.85rem; line-height: 1.6; opacity: 0.8; }
 
         /* --- 3D Model Viewer --- */
-        .model-viewer-wrapper {
-            margin-top: 28px;
-        }
+        .model-viewer-wrapper { margin-top: 28px; }
         .model-viewer-label {
             font-family: 'Roboto Mono', monospace;
             font-size: 0.65rem;
@@ -126,32 +124,14 @@
             margin-bottom: 10px;
             display: block;
         }
-        .model-canvas-wrap {
-            position: relative;
-            width: 100%;
-            line-height: 0;
-        }
-        #sapporo-3d-canvas {
+        model-viewer {
             width: 100%;
             height: 500px;
-            display: block;
             border: 1px solid rgba(255,255,255,0.07);
-            cursor: grab;
-            background: #0e0e0e;
-        }
-        #sapporo-3d-canvas:active { cursor: grabbing; }
-        #model-loading-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-family: 'Roboto Mono', monospace;
-            font-size: 0.7rem;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            color: rgba(255,255,255,0.35);
-            pointer-events: none;
-            transition: opacity 0.4s ease;
+            background-color: #0e0e0e;
+            --poster-color: #0e0e0e;
+            --progress-bar-color: #A8FF00;
+            --progress-mask: #0e0e0e;
         }
         .model-hint {
             font-family: 'Roboto Mono', monospace;
@@ -230,7 +210,7 @@
                     <div class="gallery-grid-item span-2"><img src="./sap5.png" alt="Sapporo - Beach Activation Sculpture"></div>
                     <div class="gallery-grid-item"><img src="./sap2.png" alt="Sapporo - Tote Bag"></div>
                     <div class="gallery-grid-item"><img src="./spa9.png" alt="Sapporo - Countryside Picnic"></div>
-                    <div class="gallery-grid-item span-2"><img src="./sap4.png" alt="Sapporo - Beach Activation Sculpture"></div>
+                    <div class="gallery-grid-item span-2"><img src="./spa4.png" alt="Sapporo - Digital Instagram Carousel"></div>
                     <div class="gallery-grid-item"><img src="./spa7.png" alt="Sapporo - Park Scene"></div>
                     <div class="gallery-grid-item"><img src="./spa8.png" alt="Sapporo - Spa Scene"></div>
                     <div class="gallery-grid-item span-2"><img src="./sap6.png" alt="Sapporo - Print Ad French Bistro"></div>
@@ -239,11 +219,20 @@
                 <!-- 3D Model Viewer -->
                 <div class="model-viewer-wrapper">
                     <span class="model-viewer-label">3D Model</span>
-                    <div class="model-canvas-wrap">
-                        <canvas id="sapporo-3d-canvas"></canvas>
-                        <span id="model-loading-text">Loading model...</span>
-                    </div>
-                    <span class="model-hint">Left drag &nbsp;·&nbsp; rotate &nbsp;&nbsp;|&nbsp;&nbsp; Right drag &nbsp;·&nbsp; pan &nbsp;&nbsp;|&nbsp;&nbsp; Scroll &nbsp;·&nbsp; zoom</span>
+                    <model-viewer
+                        src="./3d.glb"
+                        alt="Sapporo The Sabbatical 3D Model"
+                        camera-controls
+                        auto-rotate
+                        auto-rotate-delay="1000"
+                        rotation-per-second="20deg"
+                        shadow-intensity="1"
+                        shadow-softness="0.8"
+                        environment-image="neutral"
+                        exposure="1.1"
+                        tone-mapping="aces"
+                    ></model-viewer>
+                    <span class="model-hint">Drag &nbsp;·&nbsp; rotate &nbsp;&nbsp;|&nbsp;&nbsp; Pinch / scroll &nbsp;·&nbsp; zoom &nbsp;&nbsp;|&nbsp;&nbsp; Right drag &nbsp;·&nbsp; pan</span>
                 </div>
             </div>
 
@@ -309,152 +298,17 @@
 
     <footer>
         <div class="footer-links">
-            <a href="mailto:singhbrardivshaan@gmail.com">EMAIL</a>
+            <a href="/cdn-cgi/l/email-protection#12617b7c757a70607360767b64617a73737c52757f737b7e3c717d7f">EMAIL</a>
             <a href="https://www.linkedin.com/in/divshaan-singh-brar-038b97251" target="_blank">LINKEDIN</a>
             <a href="https://rgd.ca/members/profile/241008117" target="_blank">RGD PROFILE</a>
         </div>
         <p>&copy; 2025 Divshaan Singh Brar. All rights reserved.</p>
     </footer>
 
-    <script src="script.js"></script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="script.js"></script>
 
-    <!-- Three.js 3D Model Viewer -->
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-        }
-    }
-    </script>
-    <script type="module">
-        import * as THREE from 'three';
-        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-        const canvas = document.getElementById('sapporo-3d-canvas');
-        const loadingEl = document.getElementById('model-loading-text');
-        if (!canvas) return;
-
-        // ── Renderer ──────────────────────────────────────────────────────
-        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.outputColorSpace = THREE.SRGBColorSpace;
-        renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.3;
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-        // ── Scene ─────────────────────────────────────────────────────────
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0e0e0e);
-
-        // ── Camera ────────────────────────────────────────────────────────
-        const camera = new THREE.PerspectiveCamera(38, 1, 0.01, 200);
-        camera.position.set(0, 1.5, 5);
-
-        // ── Lights ────────────────────────────────────────────────────────
-        scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-
-        const key = new THREE.DirectionalLight(0xfff8f0, 2.4);
-        key.position.set(4, 6, 4);
-        key.castShadow = true;
-        key.shadow.mapSize.set(1024, 1024);
-        scene.add(key);
-
-        const fill = new THREE.DirectionalLight(0xcce0ff, 0.7);
-        fill.position.set(-4, 3, 2);
-        scene.add(fill);
-
-        // Site accent green rim light
-        const rim = new THREE.DirectionalLight(0xa8ff00, 0.4);
-        rim.position.set(0, 4, -6);
-        scene.add(rim);
-
-        // Shadow-catching ground
-        const ground = new THREE.Mesh(
-            new THREE.PlaneGeometry(30, 30),
-            new THREE.ShadowMaterial({ opacity: 0.18 })
-        );
-        ground.rotation.x = -Math.PI / 2;
-        ground.receiveShadow = true;
-        scene.add(ground);
-
-        // ── OrbitControls ─────────────────────────────────────────────────
-        const controls = new OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.07;
-        controls.minDistance = 0.5;
-        controls.maxDistance = 20;
-        controls.target.set(0, 0.6, 0);
-        controls.update();
-
-        // ── Resize ────────────────────────────────────────────────────────
-        function onResize() {
-            const w = canvas.parentElement.clientWidth;
-            const h = 500;
-            renderer.setSize(w, h, false);
-            camera.aspect = w / h;
-            camera.updateProjectionMatrix();
-        }
-        window.addEventListener('resize', onResize);
-        onResize();
-
-        // ── Load GLB ──────────────────────────────────────────────────────
-        new GLTFLoader().load(
-            './3d.glb',
-            (gltf) => {
-                const model = gltf.scene;
-
-                // Auto-fit: centre and scale
-                const box  = new THREE.Box3().setFromObject(model);
-                const size = box.getSize(new THREE.Vector3());
-                const cent = box.getCenter(new THREE.Vector3());
-                const maxDim = Math.max(size.x, size.y, size.z);
-                const s = 2.6 / maxDim;
-                model.scale.setScalar(s);
-                model.position.sub(cent.multiplyScalar(s));
-
-                // Sit flush on ground
-                const box2 = new THREE.Box3().setFromObject(model);
-                model.position.y -= box2.min.y;
-
-                model.traverse(c => {
-                    if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; }
-                });
-
-                scene.add(model);
-
-                // Re-target orbit to model centre
-                const box3 = new THREE.Box3().setFromObject(model);
-                controls.target.copy(box3.getCenter(new THREE.Vector3()));
-                controls.update();
-
-                // Fade out loader
-                if (loadingEl) {
-                    loadingEl.style.opacity = '0';
-                    setTimeout(() => loadingEl.remove(), 400);
-                }
-            },
-            (xhr) => {
-                if (loadingEl && xhr.total) {
-                    loadingEl.textContent = `Loading model... ${Math.round(xhr.loaded / xhr.total * 100)}%`;
-                }
-            },
-            (err) => {
-                console.error(err);
-                if (loadingEl) loadingEl.textContent = 'Could not load model.';
-            }
-        );
-
-        // ── Render Loop ───────────────────────────────────────────────────
-        (function animate() {
-            requestAnimationFrame(animate);
-            controls.update();
-            renderer.render(scene, camera);
-        })();
-    </script>
+    <!-- Google model-viewer web component -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
 </body>
 </html>
-
-
