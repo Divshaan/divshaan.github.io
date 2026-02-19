@@ -8,6 +8,134 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- Info Button --- */
+        .project-header-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 0.5em;
+        }
+        .project-header-row h3 {
+            margin: 0;
+        }
+        .info-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 1.5px solid currentColor;
+            background: transparent;
+            color: inherit;
+            font-family: 'Georgia', serif;
+            font-style: italic;
+            font-size: 13px;
+            cursor: pointer;
+            opacity: 0.45;
+            transition: opacity 0.2s ease;
+            flex-shrink: 0;
+            padding: 0;
+            line-height: 1;
+        }
+        .info-btn:hover {
+            opacity: 1;
+        }
+
+        /* --- Modal Close Button Override --- */
+        .sapporo-modal-content .modal-close {
+            font-size: 11px;
+            font-weight: 400;
+            font-family: 'Roboto Mono', monospace;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.35);
+            top: 28px;
+            right: 32px;
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        .sapporo-modal-content .modal-close::before {
+            content: '[ ';
+        }
+        .sapporo-modal-content .modal-close::after {
+            content: ' ]';
+        }
+        .sapporo-modal-content .modal-close:hover {
+            color: #A8FF00;
+        }
+
+        /* --- Sapporo Modal Content --- */
+        .sapporo-modal-content {
+            background: var(--bg-color, #0a0a0a);
+            border: 1px solid rgba(255,255,255,0.1);
+            max-width: 680px;
+            width: 90%;
+            margin: auto;
+            padding: 48px;
+            position: relative;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .sap-modal-course {
+            font-size: 0.72rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            opacity: 0.45;
+            margin: 0 0 8px;
+        }
+        .sapporo-modal-content h3 {
+            margin: 0 0 32px;
+            font-size: 1.4rem;
+            letter-spacing: 0.04em;
+        }
+        .sap-modal-section {
+            margin-bottom: 28px;
+        }
+        .sap-modal-section h4 {
+            font-size: 0.7rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            opacity: 0.5;
+            margin: 0 0 8px;
+        }
+        .sap-modal-section p {
+            margin: 0;
+            line-height: 1.65;
+            font-size: 0.92rem;
+        }
+        .sap-modal-tiles {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 32px;
+        }
+        .sap-modal-tile {
+            border: 1px solid rgba(255,255,255,0.08);
+            padding: 18px 20px;
+        }
+        .sap-modal-tile:last-child:nth-child(odd) {
+            grid-column: 1 / -1;
+        }
+        .sap-tile-label {
+            display: block;
+            font-size: 0.65rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            opacity: 0.45;
+            margin-bottom: 8px;
+        }
+        .sap-modal-tile p {
+            margin: 0;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            opacity: 0.8;
+        }
+    </style>
 </head>
 <body>
     <div id="page-transition-overlay"></div>
@@ -62,6 +190,74 @@
             </div>
 
             <div class="project-detail-showcase">
+                <div class="project-header-row">
+                    <h3>Sapporo: The Sabbatical Campaign</h3>
+                    <button class="info-btn" onclick="document.getElementById('sapporo-modal').classList.add('active'); document.body.style.overflow='hidden';" aria-label="View campaign details">i</button>
+                </div>
+                <p class="project-description">
+                    An integrated campaign positioning Sapporo as the premium, functional alternative to wine for sophisticated, high-end dining. The "Sabbatical" concept gives wine a well-deserved leave of absence — while Sapporo steps in as the crisp, clean choice that resets your palate and lets every bite taste as vivid as the first.
+                </p>
+                <div class="image-gallery-grid">
+                    <div class="gallery-grid-item span-2"><img src="./sap6.png" alt="Sapporo - Print Ad French Bistro"></div>
+                    <div class="gallery-grid-item"><img src="./sap3.png" alt="Sapporo - OOH Venetian Canal"></div>
+                    <div class="gallery-grid-item"><img src="./Sap4.png" alt="Sapporo - Digital Instagram Carousel"></div>
+                    <div class="gallery-grid-item span-2"><img src="./sap5.png" alt="Sapporo - Beach Activation Sculpture"></div>
+                    <div class="gallery-grid-item"><img src="./sap1.png" alt="Sapporo - Wine's Sabbatical Diary"></div>
+                    <div class="gallery-grid-item"><img src="./sap2.png" alt="Sapporo - Tote Bag"></div>
+                    <div class="gallery-grid-item"><img src="./sap9.png" alt="Sapporo - Countryside Picnic"></div>
+                    <div class="gallery-grid-item"><img src="./sap7.png" alt="Sapporo - Park Scene"></div>
+                    <div class="gallery-grid-item"><img src="./sap8.png" alt="Sapporo - Spa Scene"></div>
+                </div>
+            </div>
+
+            <!-- Sapporo Info Modal -->
+            <div id="sapporo-modal" class="modal" onclick="if(event.target===this){this.classList.remove('active');document.body.style.overflow='auto';}">
+                <div class="sapporo-modal-content">
+                    <button class="modal-close" onclick="document.getElementById('sapporo-modal').classList.remove('active');document.body.style.overflow='auto';">close</button>
+                    <p class="sap-modal-course">GRAF 3013 Ad Thesis &mdash; Integrated Campaign</p>
+                    <h3>Sapporo: The Sabbatical</h3>
+
+                    <div class="sap-modal-section">
+                        <h4>The Brief</h4>
+                        <p>Position Sapporo as the premium, functional alternative to wine for sophisticated, high-end meals. Target: urban 30–45-year-olds with disposable income who default to wine out of social tradition but crave culinary discovery — adhering to Canadian Alcohol Advertising restrictions by focusing on food-pairing.</p>
+                    </div>
+
+                    <div class="sap-modal-section">
+                        <h4>The Insight</h4>
+                        <p>High-end diners choose wine out of habit, not preference. Wine's tannins coat the palate — by the middle of the meal, you're tasting the wine, not the chef's work. Tradition has become a barrier to truly tasting the food.</p>
+                    </div>
+
+                    <div class="sap-modal-section">
+                        <h4>The Idea</h4>
+                        <p>Wine has been working overtime as everyone's default dinner companion — so we gave it a well-deserved leave of absence. While wine enjoys Parisian gardens, Venetian gondolas, and beach loungers, Sapporo steps in as the crisp, clean professional that resets your palate. <em>Wine's out. Sapporo's in.</em></p>
+                    </div>
+
+                    <div class="sap-modal-tiles">
+                        <div class="sap-modal-tile">
+                            <span class="sap-tile-label">Print</span>
+                            <p>The French Bistro — ground-level view from a luxury Parisian bistro. Duck Confit and Sapporo in the foreground; across the street, a paper wine bottle sits on a garden bench in a whimsical paper diorama park. <em>Headline: Wine is on Sabbatical.</em></p>
+                        </div>
+                        <div class="sap-modal-tile">
+                            <span class="sap-tile-label">OOH</span>
+                            <p>The Venetian Canal — view from a luxury restaurant window. Photorealistic Osso Buco and Sapporo in the foreground; outside, a paper wine bottle rides a paper gondola. <em>Headline: Wine Out. Sapporo In.</em></p>
+                        </div>
+                        <div class="sap-modal-tile">
+                            <span class="sap-tile-label">Digital</span>
+                            <p>Instagram Carousel "A Day in Wine's Sabbatical" — 4 slides following the wine bottle through a full day off in 3D paper diorama style, ending with a photorealistic Sapporo reality-check punchline.</p>
+                        </div>
+                        <div class="sap-modal-tile">
+                            <span class="sap-tile-label">Activation</span>
+                            <p>Life-sized wine bottle sculptures (6–7 ft) installed across major Canadian cities. Each depicts wine on sabbatical. A QR code on the base unlocks the "Sapporo Discovery Map" — an interactive guide to nearby partner restaurants.</p>
+                        </div>
+                        <div class="sap-modal-tile">
+                            <span class="sap-tile-label">Swag</span>
+                            <p>"Wine's Sabbatical Diary" — a burgundy hardcover notebook with gold foil. Plus a natural canvas tote with "Wine's Out. Sapporo's In." — both distributed through restaurant partners and city installations.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="project-detail-showcase">
     <h3>Xbox: BEYOND BOX Campaign</h3>
     <p class="project-description">
         This campaign highlights Xbox breaking its boundaries, enabling users to play anywhere with no limits. The "BEYOND BOX" concept emphasizes that Xbox is no longer confined to a physical console, with activations like 3D billboards and drone shows. 
@@ -77,13 +273,13 @@
 
     <footer>
         <div class="footer-links">
-            <a href="mailto:singhbrardivshaan@gmail.com">EMAIL</a>
+            <a href="/cdn-cgi/l/email-protection#52213b3c353a30203320363b24213a33333c12353f333b3e7c313d3f">EMAIL</a>
             <a href="https://www.linkedin.com/in/divshaan-singh-brar-038b97251" target="_blank">LINKEDIN</a>
             <a href="https://rgd.ca/members/profile/241008117" target="_blank">RGD PROFILE</a>
         </div>
         <p>&copy; 2025 Divshaan Singh Brar. All rights reserved.</p>
     </footer>
-
     <script src="script.js"></script>
 </body>
+
 </html>
