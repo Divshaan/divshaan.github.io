@@ -524,7 +524,10 @@ h1, h2, h3, h4 {
     color: rgba(255, 255, 255, 0.8);
 }
 .contact-button {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
     padding: 1rem 2rem;
     border: 1px solid var(--accent-color);
     color: var(--accent-color);
