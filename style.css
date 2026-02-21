@@ -539,10 +539,19 @@ h1, h2, h3, h4 {
     color: var(--background-color);
 }
 .primary-contact-buttons {
-    display: flex;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(5, 160px);
+    grid-template-rows: auto auto;
     gap: 1rem;
-    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.primary-contact-buttons .contact-button {
+    text-align: center;
+}
+
+.primary-contact-buttons .contact-button.resume-btn {
+    grid-column: 3;
 }
 .form-separator {
     border: 0;
