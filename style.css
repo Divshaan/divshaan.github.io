@@ -1253,3 +1253,9 @@ footer {
     background-color: transparent;
     color: var(--accent-color);
 }
+
+/* Resume button on contact page */
+.resume-contact-btn {
+    margin-top: 1.5rem;
+    text-align: center;
+}
