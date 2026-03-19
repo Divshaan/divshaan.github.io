@@ -331,6 +331,74 @@
                     <img src="./xbox.png" alt="Xbox Beyond Box Poster">
                 </div>
             </div>
+            <!-- ============================================================
+     PASTE THIS ENTIRE BLOCK into advertisement.html
+     LOCATION: After the Xbox </div> (closing .project-detail-showcase)
+                and before the closing </section> tag
+     ============================================================ -->
+
+            <div class="project-detail-showcase">
+                <div class="project-header-row">
+                    <h3>Canadian Red Cross: Panic is Optional</h3>
+                    <button class="info-btn" onclick="document.getElementById('redcross-modal').classList.add('active'); document.body.style.overflow='hidden';" aria-label="View campaign details">i</button>
+                </div>
+                <p class="project-description">
+                    An integrated campaign for the Canadian Red Cross First Aid Training program. Built around the insight that panic is a choice — and so is being prepared. "Panic is Optional. Training isn't." runs across print, OOH, and direct mail, using cinematic documentary-style photography to put bystanders face to face with emergency scenarios they weren't ready for.
+                </p>
+                <div class="image-gallery-grid">
+                    <div class="gallery-grid-item span-2"><img src="./rc_3.png" alt="Canadian Red Cross – OOH Bus Shelter: Panic is optional. Training isn't."></div>
+                    <div class="gallery-grid-item span-2"><img src="./rc_4.png" alt="Canadian Red Cross – OOH Subway Billboard: That hand is reaching for you."></div>
+                    <div class="gallery-grid-item"><img src="./rc2.png" alt="Canadian Red Cross – Direct Mail Card: He's been on the floor for 4 minutes."></div>
+                    <div class="gallery-grid-item"><img src="./rc1.png" alt="Canadian Red Cross – Print Magazine Spread"></div>
+                </div>
+            </div>
+
+            <!-- Red Cross Info Modal -->
+            <div id="redcross-modal" class="modal" onclick="if(event.target===this){this.classList.remove('active');document.body.style.overflow='auto';}">
+                <div class="sapporo-modal-content">
+                    <button class="modal-close" onclick="document.getElementById('redcross-modal').classList.remove('active');document.body.style.overflow='auto';">close</button>
+                    <p class="sap-modal-course">GRAF 3013 Ad Thesis &mdash; Integrated Campaign</p>
+                    <h3>Canadian Red Cross: Panic is Optional</h3>
+
+                    <div class="sap-modal-section">
+                        <h4>The Brief</h4>
+                        <p>Drive enrollment in Canadian Red Cross First Aid Training programs. Target: Canadian adults 25–50 who assume someone else will know what to do in an emergency — but have never trained themselves. The campaign must operate within Health Canada advertising guidelines, focusing on empowerment rather than fear exploitation.</p>
+                    </div>
+
+                    <div class="sap-modal-section">
+                        <h4>The Insight</h4>
+                        <p>Most bystanders in emergencies don't act — not because they don't care, but because they don't know what to do. Panic fills the gap that training should occupy. The absence of a plan isn't fate. It's a gap we chose not to fill.</p>
+                    </div>
+
+                    <div class="sap-modal-section">
+                        <h4>The Idea</h4>
+                        <p>Panic is a default — not a requirement. The campaign reframes first aid training as the one decision you make before the emergency happens, so that when the moment comes, you already know the next step. <em>Panic is optional. Training isn't.</em></p>
+                    </div>
+
+                    <div class="sap-modal-tiles">
+                        <div class="sap-modal-tile">
+                            <span class="sap-tile-label">OOH — Bus Shelter</span>
+                            <p>Night scene. A woman holds an unconscious stranger on a rain-soaked sidewalk — wide-eyed, present, acting. Headline: <em>Panic is optional. Training isn't.</em> Tagline: "Good intentions don't save lives. Knowing what to do does." Real, unglamourized, human.</p>
+                        </div>
+                        <div class="sap-modal-tile">
+                            <span class="sap-tile-label">OOH — Subway Billboard</span>
+                            <p>Widescreen. A cyclist down on a wet city street, hand reaching toward the viewer. The billboard is placed exactly where commuters walk past — turning passive transit time into a direct challenge: <em>That hand is reaching for you. Are you ready?</em></p>
+                        </div>
+                        <div class="sap-modal-tile">
+                            <span class="sap-tile-label">Direct Mail Card</span>
+                            <p>A stark bi-fold card. Cover: <em>"He's been on the floor for 4 minutes."</em> Inside: "You were the only one who could have helped. But nobody told you what to do. Nobody showed you the steps. Nobody gave you a plan. That's what we do." CTA: redcross.ca/firstaid</p>
+                        </div>
+                        <div class="sap-modal-tile">
+                            <span class="sap-tile-label">Print — Magazine</span>
+                            <p>Full-bleed magazine spread placed inside editorial content. A man in distress — hand to chest, reaching — photographed in high-contrast documentary style. The ad interrupts the read the same way an emergency interrupts a day. <em>Panic is optional.</em> redcross.ca/firstaid</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+<!-- ============================================================
+     END OF PASTE BLOCK
+     ============================================================ -->
 
         </section>
     </main>
