@@ -1,8 +1,46 @@
 document.addEventListener('DOMContentLoaded', function() {
 
+    // --- Scroll Reveal Observer ---
+    (function initRevealSystem() {
+        // Auto-stagger: add reveal classes to children of [data-stagger] containers
+        document.querySelectorAll('[data-stagger]').forEach(grid => {
+            const children = grid.children;
+            const type = grid.dataset.stagger;
+            const cls = type === 'image' ? 'reveal-image' : 'reveal';
+            for (let i = 0; i < children.length; i++) {
+                children[i].classList.add(cls);
+                const delay = Math.min(i, 5);
+                children[i].classList.add('reveal-delay-' + (delay + 1));
+            }
+        });
+
+        const revealElements = document.querySelectorAll('.reveal, .reveal-heading, .reveal-image');
+        const footerEl = document.querySelector('footer');
+
+        if (revealElements.length > 0 || footerEl) {
+            const revealObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        revealObserver.unobserve(entry.target);
+                    }
+                });
+            }, {
+                threshold: 0.15,
+                rootMargin: '0px 0px -50px 0px'
+            });
+
+            // Delay to avoid fighting page transition overlay
+            setTimeout(() => {
+                revealElements.forEach(el => revealObserver.observe(el));
+                if (footerEl) revealObserver.observe(footerEl);
+            }, 300);
+        }
+    })();
+
     // --- Hero Section Animations ---
     const heroSection = document.querySelector('.hero');
-    if (heroSection) {
+    if (heroSection && typeof gsap !== 'undefined') {
         const heroH1 = heroSection.querySelector('h1');
         const heroSubtitle = heroSection.querySelector('.subtitle');
         const heroCta = heroSection.querySelector('.hero-cta');

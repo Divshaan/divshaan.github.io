@@ -1052,6 +1052,98 @@ footer {
 }
 
 
+/* --- Scroll Reveal System --- */
+.reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+.reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.reveal-heading {
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.reveal-heading.visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.reveal-image {
+    opacity: 0;
+    transform: scale(0.97);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.reveal-image.visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Stagger delays */
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+.reveal-delay-5 { transition-delay: 0.5s; }
+.reveal-delay-6 { transition-delay: 0.6s; }
+
+/* Footer reveal */
+footer .footer-links,
+footer p {
+    opacity: 0;
+    transform: translateY(15px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+footer.visible .footer-links {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: 0s;
+}
+footer.visible p {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: 0.15s;
+}
+
+/* Hover enhancements */
+.contact-button:hover,
+.btn-case-study:hover {
+    box-shadow: 0 0 15px rgba(168, 255, 0, 0.3), 0 0 30px rgba(168, 255, 0, 0.1);
+}
+
+.work-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: var(--accent-color);
+    transition: width 0.4s ease;
+    z-index: 3;
+}
+.work-card:hover::after {
+    width: 100%;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .reveal, .reveal-heading, .reveal-image {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+    }
+    footer .footer-links, footer p {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+    }
+}
+
 /* Responsive Adjustments */
 @media (max-width: 768px) {
     main {
