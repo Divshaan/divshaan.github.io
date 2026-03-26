@@ -18,22 +18,57 @@ document.addEventListener('DOMContentLoaded', function() {
         const footerEl = document.querySelector('footer');
 
         if (revealElements.length > 0 || footerEl) {
-            const revealObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('visible');
-                        revealObserver.unobserve(entry.target);
+            // Check if element is in the viewport
+            function isInViewport(el) {
+                const rect = el.getBoundingClientRect();
+                return rect.top < window.innerHeight - 50 && rect.bottom > 0;
+            }
+
+            // On load: stagger elements already visible in viewport
+            // so they cascade in instead of all appearing at once
+            setTimeout(() => {
+                const inView = [];
+                const belowFold = [];
+
+                revealElements.forEach(el => {
+                    if (isInViewport(el)) {
+                        inView.push(el);
+                    } else {
+                        belowFold.push(el);
                     }
                 });
-            }, {
-                threshold: 0.15,
-                rootMargin: '0px 0px -50px 0px'
-            });
 
-            // Delay to avoid fighting page transition overlay
-            setTimeout(() => {
-                revealElements.forEach(el => revealObserver.observe(el));
-                if (footerEl) revealObserver.observe(footerEl);
+                // Stagger above-fold elements with 120ms intervals
+                inView.forEach((el, i) => {
+                    setTimeout(() => {
+                        el.classList.add('visible');
+                    }, i * 120);
+                });
+
+                // Footer if in view
+                if (footerEl && isInViewport(footerEl)) {
+                    setTimeout(() => {
+                        footerEl.classList.add('visible');
+                    }, inView.length * 120);
+                }
+
+                // Set up observer for remaining below-fold elements
+                const revealObserver = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+                            revealObserver.unobserve(entry.target);
+                        }
+                    });
+                }, {
+                    threshold: 0.15,
+                    rootMargin: '0px 0px -50px 0px'
+                });
+
+                belowFold.forEach(el => revealObserver.observe(el));
+                if (footerEl && !isInViewport(footerEl)) {
+                    revealObserver.observe(footerEl);
+                }
             }, 300);
         }
     })();
