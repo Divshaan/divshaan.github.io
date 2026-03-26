@@ -147,13 +147,40 @@ document.addEventListener('DOMContentLoaded', function() {
             const influenceRadius = 150;
 
             let mouse = { x: -9999, y: -9999 };
+            let hasRealMouse = false;
             let dots = [];
             let animationId;
+
+            // Ambient wandering glow for mobile / no-mouse
+            const ambient = {
+                x: 0, y: 0,
+                targetX: 0, targetY: 0,
+                speed: 0.02
+            };
+
+            function pickNewAmbientTarget() {
+                ambient.targetX = Math.random() * heroCanvas.width;
+                ambient.targetY = Math.random() * heroCanvas.height;
+            }
+
+            function updateAmbient() {
+                ambient.x += (ambient.targetX - ambient.x) * ambient.speed;
+                ambient.y += (ambient.targetY - ambient.y) * ambient.speed;
+                // Pick a new target when close enough
+                const dx = ambient.targetX - ambient.x;
+                const dy = ambient.targetY - ambient.y;
+                if (Math.sqrt(dx * dx + dy * dy) < 30) {
+                    pickNewAmbientTarget();
+                }
+            }
 
             function resizeHeroCanvas() {
                 heroCanvas.width = heroSection.offsetWidth;
                 heroCanvas.height = heroSection.offsetHeight;
                 buildDots();
+                pickNewAmbientTarget();
+                ambient.x = Math.random() * heroCanvas.width;
+                ambient.y = Math.random() * heroCanvas.height;
             }
 
             function buildDots() {
@@ -173,10 +200,21 @@ document.addEventListener('DOMContentLoaded', function() {
             function drawDots() {
                 ctx.clearRect(0, 0, heroCanvas.width, heroCanvas.height);
 
+                // Use real mouse if available, otherwise use ambient wandering glow
+                let glowX, glowY;
+                if (hasRealMouse && mouse.x > -9000) {
+                    glowX = mouse.x;
+                    glowY = mouse.y;
+                } else {
+                    updateAmbient();
+                    glowX = ambient.x;
+                    glowY = ambient.y;
+                }
+
                 for (let i = 0; i < dots.length; i++) {
                     const dot = dots[i];
-                    const dx = mouse.x - dot.x;
-                    const dy = mouse.y - dot.y;
+                    const dx = glowX - dot.x;
+                    const dy = glowY - dot.y;
                     const dist = Math.sqrt(dx * dx + dy * dy);
 
                     let opacity = baseOpacity;
@@ -198,6 +236,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             heroSection.addEventListener('mousemove', (e) => {
+                hasRealMouse = true;
                 const rect = heroCanvas.getBoundingClientRect();
                 mouse.x = e.clientX - rect.left;
                 mouse.y = e.clientY - rect.top;
@@ -213,11 +252,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const rect = heroCanvas.getBoundingClientRect();
                 mouse.x = e.touches[0].clientX - rect.left;
                 mouse.y = e.touches[0].clientY - rect.top;
+                hasRealMouse = true;
             });
 
             heroSection.addEventListener('touchend', () => {
                 mouse.x = -9999;
                 mouse.y = -9999;
+                hasRealMouse = false;
             });
 
             window.addEventListener('resize', resizeHeroCanvas);
