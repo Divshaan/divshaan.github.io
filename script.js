@@ -1,4 +1,158 @@
 document.addEventListener('DOMContentLoaded', function() {
+
+    // --- Hero Section Animations ---
+    const heroSection = document.querySelector('.hero');
+    if (heroSection) {
+        const heroH1 = heroSection.querySelector('h1');
+        const heroSubtitle = heroSection.querySelector('.subtitle');
+        const heroCta = heroSection.querySelector('.hero-cta');
+        const heroCanvas = document.getElementById('hero-canvas');
+
+        // ===== 1. TEXT SCRAMBLE / DECODE EFFECT =====
+        const finalText = 'DIVSHAAN SINGH BRAR';
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$%&*!?<>{}[]';
+        const scrambleDuration = 1500; // ms
+        const frameInterval = 40; // ms per frame
+        const totalFrames = scrambleDuration / frameInterval;
+
+        let currentFrame = 0;
+        heroH1.textContent = finalText.replace(/[^ ]/g, () => chars[Math.floor(Math.random() * chars.length)]);
+
+        const scrambleInterval = setInterval(() => {
+            currentFrame++;
+            const progress = currentFrame / totalFrames;
+            // Characters resolve left-to-right based on progress
+            const resolved = Math.floor(progress * finalText.length);
+
+            let display = '';
+            for (let i = 0; i < finalText.length; i++) {
+                if (finalText[i] === ' ') {
+                    display += ' ';
+                } else if (i < resolved) {
+                    display += finalText[i];
+                } else {
+                    display += chars[Math.floor(Math.random() * chars.length)];
+                }
+            }
+            heroH1.textContent = display;
+
+            if (currentFrame >= totalFrames) {
+                clearInterval(scrambleInterval);
+                heroH1.textContent = finalText;
+            }
+        }, frameInterval);
+
+        // ===== 2. STAGGERED ENTRANCE ANIMATIONS (GSAP) =====
+        const tl = gsap.timeline();
+        tl.to(heroH1, {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'power3.out'
+        })
+        .to(heroSubtitle, {
+            opacity: 1,
+            y: 0,
+            duration: 0.6,
+            ease: 'power3.out'
+        }, '-=0.5')
+        .to(heroCta, {
+            opacity: 1,
+            y: 0,
+            duration: 0.6,
+            ease: 'power3.out'
+        }, '-=0.3');
+
+        // ===== 3. INTERACTIVE DOT GRID (CANVAS) =====
+        if (heroCanvas) {
+            const ctx = heroCanvas.getContext('2d');
+            const dotSpacing = 40;
+            const baseDotRadius = 1;
+            const maxDotRadius = 3;
+            const baseOpacity = 0.15;
+            const maxOpacity = 0.8;
+            const influenceRadius = 150;
+
+            let mouse = { x: -9999, y: -9999 };
+            let dots = [];
+            let animationId;
+
+            function resizeHeroCanvas() {
+                heroCanvas.width = heroSection.offsetWidth;
+                heroCanvas.height = heroSection.offsetHeight;
+                buildDots();
+            }
+
+            function buildDots() {
+                dots = [];
+                const cols = Math.ceil(heroCanvas.width / dotSpacing) + 1;
+                const rows = Math.ceil(heroCanvas.height / dotSpacing) + 1;
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        dots.push({
+                            x: c * dotSpacing,
+                            y: r * dotSpacing
+                        });
+                    }
+                }
+            }
+
+            function drawDots() {
+                ctx.clearRect(0, 0, heroCanvas.width, heroCanvas.height);
+
+                for (let i = 0; i < dots.length; i++) {
+                    const dot = dots[i];
+                    const dx = mouse.x - dot.x;
+                    const dy = mouse.y - dot.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    let opacity = baseOpacity;
+                    let radius = baseDotRadius;
+
+                    if (dist < influenceRadius) {
+                        const t = 1 - (dist / influenceRadius);
+                        opacity = baseOpacity + (maxOpacity - baseOpacity) * t;
+                        radius = baseDotRadius + (maxDotRadius - baseDotRadius) * t;
+                    }
+
+                    ctx.beginPath();
+                    ctx.arc(dot.x, dot.y, radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(168, 255, 0, ${opacity})`;
+                    ctx.fill();
+                }
+
+                animationId = requestAnimationFrame(drawDots);
+            }
+
+            heroSection.addEventListener('mousemove', (e) => {
+                const rect = heroCanvas.getBoundingClientRect();
+                mouse.x = e.clientX - rect.left;
+                mouse.y = e.clientY - rect.top;
+            });
+
+            heroSection.addEventListener('mouseleave', () => {
+                mouse.x = -9999;
+                mouse.y = -9999;
+            });
+
+            // Touch support
+            heroSection.addEventListener('touchmove', (e) => {
+                const rect = heroCanvas.getBoundingClientRect();
+                mouse.x = e.touches[0].clientX - rect.left;
+                mouse.y = e.touches[0].clientY - rect.top;
+            });
+
+            heroSection.addEventListener('touchend', () => {
+                mouse.x = -9999;
+                mouse.y = -9999;
+            });
+
+            window.addEventListener('resize', resizeHeroCanvas);
+            resizeHeroCanvas();
+            drawDots();
+        }
+    }
+
     // --- Page Transition Logic ---
     const transitionOverlay = document.getElementById('page-transition-overlay');
 
