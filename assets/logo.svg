@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" role="img" aria-label="DSB – Divshaan Singh Brar">
+  <title>DSB</title>
+  <style>
+    .logo-text {
+      font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+      font-weight: 700;
+      font-size: 28px;
+      fill: #ffffff;
+      letter-spacing: 0.08em;
+    }
+    .logo-dot {
+      fill: #A8FF00;
+    }
+  </style>
+  <text class="logo-text" x="4" y="30">DSB</text>
+  <circle class="logo-dot" cx="112" cy="28" r="4"/>
+</svg>
