@@ -373,10 +373,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 sPositions[i*3]   = (Math.random()-0.5) * 1200;
                 sPositions[i*3+1] = (Math.random()-0.5) * 800;
                 sPositions[i*3+2] = -200 + Math.random() * 200;
-                sSizes[i] = 0.5 + Math.random() * 2.5;
+                sSizes[i] = 2.5 + Math.random() * 4.5;
                 sBaseOpacities.push(0.3 + Math.random() * 0.7);
                 sPhases.push({
-                    speed: 0.5 + Math.random() * 3,
+                    speed: 0.15 + Math.random() * 0.6,
                     offset: Math.random() * Math.PI * 2,
                     twinkleIntensity: 0.3 + Math.random() * 0.7
                 });
@@ -404,7 +404,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 '  float d = length(gl_PointCoord - vec2(0.5));',
                 '  if (d > 0.5) discard;',
                 '  float glow = 1.0 - smoothstep(0.0, 0.5, d);',
-                '  gl_FragColor = vec4(1.0, 1.0, 0.95, glow * glow * vAlpha);',
+                '  gl_FragColor = vec4(0.66, 1.0, 0.0, glow * glow * vAlpha);',
                 '}'
             ].join('\n');
 
@@ -465,15 +465,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     var ph = sPhases[i];
                     var twinkle = Math.sin(starTime * ph.speed + ph.offset);
                     var brightness = sBaseOpacities[i] + twinkle * ph.twinkleIntensity * 0.4;
-                    sizes[i] = Math.max(0.3, brightness * 2.5);
+                    sizes[i] = Math.max(2, brightness * 5);
 
                     // Stars near mouse glow brighter
                     var dx = sPositions[i*3] - mouseGlow.x;
                     var dy = sPositions[i*3+1] - mouseGlow.y;
                     var dist = Math.sqrt(dx*dx + dy*dy);
                     if (dist < 150) {
-                        var boost = (1 - dist/150) * 2;
-                        sizes[i] = Math.min(5, sizes[i] + boost);
+                        var boost = (1 - dist/150) * 3;
+                        sizes[i] = Math.min(9, sizes[i] + boost);
                     }
                 }
                 sGeo.attributes.size.needsUpdate = true;
@@ -502,8 +502,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         sp[idx]=a.x; sp[idx+1]=a.y; sp[idx+2]=a.z;
                         sp[idx+3]=b.x; sp[idx+4]=b.y; sp[idx+5]=b.z;
                         var fade = (1 - t/ss.trail.length) * ss.life;
-                        sc[idx]=fade; sc[idx+1]=fade; sc[idx+2]=fade*0.8;
-                        sc[idx+3]=fade*0.5; sc[idx+4]=fade*0.5; sc[idx+5]=fade*0.3;
+                        sc[idx]=fade*0.66; sc[idx+1]=fade; sc[idx+2]=0;
+                        sc[idx+3]=fade*0.33; sc[idx+4]=fade*0.5; sc[idx+5]=0;
                         segCount++;
                     }
                 }
