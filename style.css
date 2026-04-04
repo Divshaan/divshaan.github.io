@@ -119,11 +119,14 @@ body {
     z-index: 1000;
 }
 .logo {
-    font-family: var(--font-secondary);
-    font-weight: 700;
-    font-size: 1.5rem;
-    color: var(--accent-color);
     text-decoration: none;
+    display: flex;
+    align-items: center;
+}
+.logo-img {
+    height: 32px;
+    width: auto;
+    display: block;
 }
 nav a {
     color: var(--text-color);
