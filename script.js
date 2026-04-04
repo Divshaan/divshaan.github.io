@@ -359,50 +359,162 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // ────────────────────────────────────────
-        // ABOUT: Morphing wave terrain that follows mouse
+        // ABOUT: Interactive night sky with twinkling stars
         // ────────────────────────────────────────
         else if (page === 'about') {
-            var SEG = isMobile ? 40 : 80;
-            var planeGeo = new THREE.PlaneGeometry(800, 800, SEG, SEG);
-            var planeMat = new THREE.MeshBasicMaterial({ color:0xA8FF00, wireframe:true, transparent:true, opacity:0.2 });
-            var plane = new THREE.Mesh(planeGeo, planeMat);
-            plane.rotation.x = -Math.PI / 2.5;
-            plane.position.y = -150;
-            plane.position.z = -100;
-            scene.add(plane);
+            var STAR_COUNT = isMobile ? 250 : 500;
+            var SHOOT_MAX = 3;
+            var sPositions = new Float32Array(STAR_COUNT * 3);
+            var sSizes = new Float32Array(STAR_COUNT);
+            var sBaseOpacities = [];
+            var sPhases = [];
 
-            var basePositions = new Float32Array(planeGeo.attributes.position.array);
-            var waveTime = 0;
-            var mouseInfluence = { x: 0, y: 0 };
+            for (var i = 0; i < STAR_COUNT; i++) {
+                sPositions[i*3]   = (Math.random()-0.5) * 1200;
+                sPositions[i*3+1] = (Math.random()-0.5) * 800;
+                sPositions[i*3+2] = -200 + Math.random() * 200;
+                sSizes[i] = 0.5 + Math.random() * 2.5;
+                sBaseOpacities.push(0.3 + Math.random() * 0.7);
+                sPhases.push({
+                    speed: 0.5 + Math.random() * 3,
+                    offset: Math.random() * Math.PI * 2,
+                    twinkleIntensity: 0.3 + Math.random() * 0.7
+                });
+            }
+
+            var sGeo = new THREE.BufferGeometry();
+            sGeo.setAttribute('position', new THREE.BufferAttribute(sPositions, 3));
+            sGeo.setAttribute('size', new THREE.BufferAttribute(sSizes, 1));
+
+            // Custom shader for varied star sizes and twinkling
+            var starVert = [
+                'attribute float size;',
+                'varying float vAlpha;',
+                'uniform float uTime;',
+                'void main() {',
+                '  vec4 mvPos = modelViewMatrix * vec4(position, 1.0);',
+                '  gl_PointSize = size * (300.0 / -mvPos.z);',
+                '  gl_Position = projectionMatrix * mvPos;',
+                '  vAlpha = 1.0;',
+                '}'
+            ].join('\n');
+            var starFrag = [
+                'varying float vAlpha;',
+                'void main() {',
+                '  float d = length(gl_PointCoord - vec2(0.5));',
+                '  if (d > 0.5) discard;',
+                '  float glow = 1.0 - smoothstep(0.0, 0.5, d);',
+                '  gl_FragColor = vec4(1.0, 1.0, 0.95, glow * glow * vAlpha);',
+                '}'
+            ].join('\n');
+
+            var starMat = new THREE.ShaderMaterial({
+                uniforms: { uTime: { value: 0 } },
+                vertexShader: starVert,
+                fragmentShader: starFrag,
+                transparent: true,
+                depthWrite: false,
+                blending: THREE.AdditiveBlending
+            });
+
+            var stars = new THREE.Points(sGeo, starMat);
+            scene.add(stars);
+
+            // Shooting stars
+            var shootingStars = [];
+            var shootGeo = new THREE.BufferGeometry();
+            var TRAIL_LEN = 20;
+            var shootPositions = new Float32Array(SHOOT_MAX * TRAIL_LEN * 3);
+            var shootColors = new Float32Array(SHOOT_MAX * TRAIL_LEN * 3);
+            shootGeo.setAttribute('position', new THREE.BufferAttribute(shootPositions, 3));
+            shootGeo.setAttribute('color', new THREE.BufferAttribute(shootColors, 3));
+            shootGeo.setDrawRange(0, 0);
+            var shootMat = new THREE.LineBasicMaterial({ vertexColors:true, transparent:true, opacity:0.8, blending:THREE.AdditiveBlending });
+            var shootLines = new THREE.LineSegments(shootGeo, shootMat);
+            scene.add(shootLines);
+
+            function spawnShootingStar() {
+                if (shootingStars.length >= SHOOT_MAX) return;
+                var startX = (Math.random()-0.5) * 800;
+                var startY = 200 + Math.random() * 200;
+                shootingStars.push({
+                    x: startX, y: startY, z: -50 + Math.random() * 50,
+                    vx: -3 - Math.random() * 4,
+                    vy: -4 - Math.random() * 3,
+                    life: 1.0,
+                    decay: 0.015 + Math.random() * 0.01,
+                    trail: []
+                });
+            }
+
+            var starTime = 0;
+            var mouseGlow = { x: 0, y: 0 };
+
+            camera.position.z = 400;
 
             animateFn = function() {
-                mouse3D.x += (mouse3D.tx - mouse3D.x) * 0.08;
-                mouse3D.y += (mouse3D.ty - mouse3D.y) * 0.08;
-                mouseInfluence.x += (mouse3D.x * 400 - mouseInfluence.x) * 0.04;
-                mouseInfluence.y += (mouse3D.y * 400 - mouseInfluence.y) * 0.04;
-                waveTime += 0.015;
+                mouse3D.x += (mouse3D.tx - mouse3D.x) * 0.06;
+                mouse3D.y += (mouse3D.ty - mouse3D.y) * 0.06;
+                mouseGlow.x += (mouse3D.x * 300 - mouseGlow.x) * 0.03;
+                mouseGlow.y += (mouse3D.y * 200 - mouseGlow.y) * 0.03;
+                starTime += 0.016;
 
-                var pos = planeGeo.attributes.position.array;
-                for (var i = 0; i < pos.length; i += 3) {
-                    var bx = basePositions[i];
-                    var by = basePositions[i + 1];
-                    // Distance from mouse influence point
-                    var dx = bx - mouseInfluence.x;
-                    var dy = by - mouseInfluence.y;
-                    var dist = Math.sqrt(dx * dx + dy * dy);
-                    // Mouse creates a tall, focused peak
-                    var mousePeak = Math.exp(-dist * dist / 15000) * 60;
-                    // Ambient rolling waves
-                    var wave = Math.sin(bx * 0.01 + waveTime) * 15 +
-                               Math.sin(by * 0.012 + waveTime * 0.8) * 12 +
-                               Math.sin((bx + by) * 0.008 + waveTime * 1.3) * 8;
-                    pos[i + 2] = wave + mousePeak;
+                // Twinkle stars by modulating size
+                var sizes = sGeo.attributes.size.array;
+                for (var i = 0; i < STAR_COUNT; i++) {
+                    var ph = sPhases[i];
+                    var twinkle = Math.sin(starTime * ph.speed + ph.offset);
+                    var brightness = sBaseOpacities[i] + twinkle * ph.twinkleIntensity * 0.4;
+                    sizes[i] = Math.max(0.3, brightness * 2.5);
+
+                    // Stars near mouse glow brighter
+                    var dx = sPositions[i*3] - mouseGlow.x;
+                    var dy = sPositions[i*3+1] - mouseGlow.y;
+                    var dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist < 150) {
+                        var boost = (1 - dist/150) * 2;
+                        sizes[i] = Math.min(5, sizes[i] + boost);
+                    }
                 }
-                planeGeo.attributes.position.needsUpdate = true;
+                sGeo.attributes.size.needsUpdate = true;
+                starMat.uniforms.uTime.value = starTime;
 
-                camera.position.x += (mouse3D.x * 60 - camera.position.x) * 0.02;
-                camera.position.y += (mouse3D.y * 30 + 100 - camera.position.y) * 0.02;
-                camera.lookAt(new THREE.Vector3(0, -100, -100));
+                // Spawn shooting stars occasionally
+                if (Math.random() < 0.008) spawnShootingStar();
+
+                // Update shooting stars
+                var segCount = 0;
+                var sp = shootGeo.attributes.position.array;
+                var sc = shootGeo.attributes.color.array;
+                for (var i = shootingStars.length - 1; i >= 0; i--) {
+                    var ss = shootingStars[i];
+                    ss.trail.unshift({ x: ss.x, y: ss.y, z: ss.z });
+                    if (ss.trail.length > TRAIL_LEN) ss.trail.pop();
+                    ss.x += ss.vx;
+                    ss.y += ss.vy;
+                    ss.life -= ss.decay;
+
+                    if (ss.life <= 0) { shootingStars.splice(i, 1); continue; }
+
+                    for (var t = 0; t < ss.trail.length - 1; t++) {
+                        var idx = segCount * 6;
+                        var a = ss.trail[t]; var b = ss.trail[t+1];
+                        sp[idx]=a.x; sp[idx+1]=a.y; sp[idx+2]=a.z;
+                        sp[idx+3]=b.x; sp[idx+4]=b.y; sp[idx+5]=b.z;
+                        var fade = (1 - t/ss.trail.length) * ss.life;
+                        sc[idx]=fade; sc[idx+1]=fade; sc[idx+2]=fade*0.8;
+                        sc[idx+3]=fade*0.5; sc[idx+4]=fade*0.5; sc[idx+5]=fade*0.3;
+                        segCount++;
+                    }
+                }
+                shootGeo.setDrawRange(0, segCount * 2);
+                shootGeo.attributes.position.needsUpdate = true;
+                shootGeo.attributes.color.needsUpdate = true;
+
+                // Gentle parallax
+                camera.position.x += (mouse3D.x * 30 - camera.position.x) * 0.02;
+                camera.position.y += (mouse3D.y * 20 - camera.position.y) * 0.02;
+                camera.lookAt(scene.position);
             };
         }
 
