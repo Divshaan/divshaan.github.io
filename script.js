@@ -137,174 +137,35 @@ document.addEventListener('DOMContentLoaded', function() {
 
     }
 
-    // ===== 3D BACKGROUND PARTICLE NETWORK (THREE.JS) =====
+    // ===== 3D BACKGROUND ANIMATIONS (PAGE-SPECIFIC) =====
     (function init3DBackground() {
         if (typeof THREE === 'undefined') return;
-
-        const container = document.getElementById('bg-animation');
+        var container = document.getElementById('bg-animation');
         if (!container) return;
 
-        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        const isMobile = window.innerWidth < 768;
-        const PARTICLE_COUNT = isMobile ? 60 : 120;
-        const CONNECTION_DISTANCE = isMobile ? 120 : 150;
-        const FIELD_SIZE = 400;
+        var isMobile = window.innerWidth < 768;
+        var mouse3D = { x: 0, y: 0, tx: 0, ty: 0 };
+        var mouseWorld = new THREE.Vector3();
 
-        // Scene setup
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
-        camera.position.z = 350;
-
-        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        // Shared renderer
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 2000);
+        camera.position.z = 400;
+        var renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.setClearColor(0x000000, 0);
         container.appendChild(renderer.domElement);
 
-        // Mouse tracking for parallax
-        const mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
-
-        // Create particles
-        const particlePositions = new Float32Array(PARTICLE_COUNT * 3);
-        const particleVelocities = [];
-
-        for (let i = 0; i < PARTICLE_COUNT; i++) {
-            const i3 = i * 3;
-            particlePositions[i3] = (Math.random() - 0.5) * FIELD_SIZE * 2;
-            particlePositions[i3 + 1] = (Math.random() - 0.5) * FIELD_SIZE * 2;
-            particlePositions[i3 + 2] = (Math.random() - 0.5) * FIELD_SIZE * 2;
-
-            particleVelocities.push({
-                x: (Math.random() - 0.5) * 0.3,
-                y: (Math.random() - 0.5) * 0.3,
-                z: (Math.random() - 0.5) * 0.3
-            });
-        }
-
-        const particleGeometry = new THREE.BufferGeometry();
-        particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
-
-        const particleMaterial = new THREE.PointsMaterial({
-            color: 0xA8FF00,
-            size: isMobile ? 2.5 : 2,
-            transparent: true,
-            opacity: 0.8,
-            sizeAttenuation: true
-        });
-
-        const points = new THREE.Points(particleGeometry, particleMaterial);
-        scene.add(points);
-
-        // Line connections
-        const maxLines = PARTICLE_COUNT * PARTICLE_COUNT;
-        const linePositions = new Float32Array(maxLines * 6);
-        const lineColors = new Float32Array(maxLines * 6);
-        const lineGeometry = new THREE.BufferGeometry();
-        lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
-        lineGeometry.setAttribute('color', new THREE.BufferAttribute(lineColors, 3));
-        lineGeometry.setDrawRange(0, 0);
-
-        const lineMaterial = new THREE.LineBasicMaterial({
-            vertexColors: true,
-            transparent: true,
-            opacity: 0.4,
-            blending: THREE.AdditiveBlending
-        });
-
-        const lineSegments = new THREE.LineSegments(lineGeometry, lineMaterial);
-        scene.add(lineSegments);
-
-        // Animation
-        let animFrameId;
-        const baseRotationSpeed = 0.0003;
-
-        function animate() {
-            animFrameId = requestAnimationFrame(animate);
-
-            if (document.hidden) return;
-
-            const positions = particleGeometry.attributes.position.array;
-
-            // Update particle positions
-            if (!prefersReducedMotion) {
-                for (let i = 0; i < PARTICLE_COUNT; i++) {
-                    const i3 = i * 3;
-                    const vel = particleVelocities[i];
-
-                    positions[i3] += vel.x;
-                    positions[i3 + 1] += vel.y;
-                    positions[i3 + 2] += vel.z;
-
-                    // Bounce off boundaries
-                    if (Math.abs(positions[i3]) > FIELD_SIZE) vel.x *= -1;
-                    if (Math.abs(positions[i3 + 1]) > FIELD_SIZE) vel.y *= -1;
-                    if (Math.abs(positions[i3 + 2]) > FIELD_SIZE) vel.z *= -1;
-                }
-                particleGeometry.attributes.position.needsUpdate = true;
-            }
-
-            // Update line connections
-            let lineCount = 0;
-            const lPos = lineGeometry.attributes.position.array;
-            const lCol = lineGeometry.attributes.color.array;
-
-            for (let i = 0; i < PARTICLE_COUNT; i++) {
-                const i3 = i * 3;
-                for (let j = i + 1; j < PARTICLE_COUNT; j++) {
-                    const j3 = j * 3;
-                    const dx = positions[i3] - positions[j3];
-                    const dy = positions[i3 + 1] - positions[j3 + 1];
-                    const dz = positions[i3 + 2] - positions[j3 + 2];
-                    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-
-                    if (dist < CONNECTION_DISTANCE) {
-                        const alpha = 1 - (dist / CONNECTION_DISTANCE);
-                        const idx = lineCount * 6;
-
-                        lPos[idx] = positions[i3];
-                        lPos[idx + 1] = positions[i3 + 1];
-                        lPos[idx + 2] = positions[i3 + 2];
-                        lPos[idx + 3] = positions[j3];
-                        lPos[idx + 4] = positions[j3 + 1];
-                        lPos[idx + 5] = positions[j3 + 2];
-
-                        // Neon green with fading alpha (encoded in brightness)
-                        const r = 0.66 * alpha;
-                        const g = 1.0 * alpha;
-                        const b = 0.0 * alpha;
-                        lCol[idx] = r; lCol[idx + 1] = g; lCol[idx + 2] = b;
-                        lCol[idx + 3] = r; lCol[idx + 4] = g; lCol[idx + 5] = b;
-
-                        lineCount++;
-                    }
-                }
-            }
-            lineGeometry.setDrawRange(0, lineCount * 2);
-            lineGeometry.attributes.position.needsUpdate = true;
-            lineGeometry.attributes.color.needsUpdate = true;
-
-            // Subtle auto-rotation
-            if (!prefersReducedMotion) {
-                points.rotation.y += baseRotationSpeed;
-                points.rotation.x += baseRotationSpeed * 0.5;
-                lineSegments.rotation.y = points.rotation.y;
-                lineSegments.rotation.x = points.rotation.x;
-            }
-
-            // Smooth mouse parallax
-            mouse.x += (mouse.targetX - mouse.x) * 0.05;
-            mouse.y += (mouse.targetY - mouse.y) * 0.05;
-            camera.position.x = mouse.x * 30;
-            camera.position.y = -mouse.y * 30;
-            camera.lookAt(scene.position);
-
-            renderer.render(scene, camera);
-        }
-
-        // Event listeners
+        // Mouse tracking
         document.addEventListener('mousemove', function(e) {
-            mouse.targetX = (e.clientX / window.innerWidth) * 2 - 1;
-            mouse.targetY = (e.clientY / window.innerHeight) * 2 - 1;
+            mouse3D.tx = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse3D.ty = -(e.clientY / window.innerHeight) * 2 + 1;
+        });
+        // Touch support
+        document.addEventListener('touchmove', function(e) {
+            mouse3D.tx = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
+            mouse3D.ty = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
         });
 
         window.addEventListener('resize', function() {
@@ -313,17 +174,377 @@ document.addEventListener('DOMContentLoaded', function() {
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        // Cleanup on page unload
+        // Detect page
+        var path = window.location.pathname;
+        var page = 'home';
+        if (path.indexOf('work.html') !== -1 && path.indexOf('more-work') === -1) page = 'work';
+        else if (path.indexOf('about.html') !== -1) page = 'about';
+        else if (path.indexOf('contact.html') !== -1) page = 'contact';
+        else if (path.indexOf('more-work.html') !== -1) page = 'morework';
+
+        var animFrameId;
+        var animateFn;
+
+        // ────────────────────────────────────────
+        // HOME: Particle constellation with mouse repulsion
+        // ────────────────────────────────────────
+        if (page === 'home') {
+            var PC = isMobile ? 80 : 150;
+            var FIELD = 400;
+            var CONN = isMobile ? 120 : 150;
+            var REPULSE = 120;
+            var positions = new Float32Array(PC * 3);
+            var velocities = [];
+            for (var i = 0; i < PC; i++) {
+                positions[i*3]   = (Math.random()-0.5) * FIELD * 2;
+                positions[i*3+1] = (Math.random()-0.5) * FIELD * 2;
+                positions[i*3+2] = (Math.random()-0.5) * FIELD * 2;
+                velocities.push({ x:(Math.random()-0.5)*0.4, y:(Math.random()-0.5)*0.4, z:(Math.random()-0.5)*0.4 });
+            }
+            var pGeo = new THREE.BufferGeometry();
+            pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            var pMat = new THREE.PointsMaterial({ color:0xA8FF00, size:isMobile?3:2.5, transparent:true, opacity:0.85, sizeAttenuation:true });
+            var pts = new THREE.Points(pGeo, pMat);
+            scene.add(pts);
+
+            var maxL = PC * PC;
+            var lPos = new Float32Array(maxL * 6);
+            var lCol = new Float32Array(maxL * 6);
+            var lGeo = new THREE.BufferGeometry();
+            lGeo.setAttribute('position', new THREE.BufferAttribute(lPos, 3));
+            lGeo.setAttribute('color', new THREE.BufferAttribute(lCol, 3));
+            lGeo.setDrawRange(0, 0);
+            var lMat = new THREE.LineBasicMaterial({ vertexColors:true, transparent:true, opacity:0.4, blending:THREE.AdditiveBlending });
+            var lines = new THREE.LineSegments(lGeo, lMat);
+            scene.add(lines);
+
+            animateFn = function() {
+                mouse3D.x += (mouse3D.tx - mouse3D.x) * 0.08;
+                mouse3D.y += (mouse3D.ty - mouse3D.y) * 0.08;
+                // Convert mouse to world space
+                mouseWorld.set(mouse3D.x, mouse3D.y, 0.5).unproject(camera);
+                var dir = mouseWorld.sub(camera.position).normalize();
+                var dist = -camera.position.z / dir.z;
+                var mousePos = camera.position.clone().add(dir.multiplyScalar(dist));
+
+                var p = pGeo.attributes.position.array;
+                for (var i = 0; i < PC; i++) {
+                    var i3 = i*3;
+                    var v = velocities[i];
+                    // Mouse repulsion
+                    var dx = p[i3] - mousePos.x;
+                    var dy = p[i3+1] - mousePos.y;
+                    var d = Math.sqrt(dx*dx + dy*dy);
+                    if (d < REPULSE && d > 0) {
+                        var force = (REPULSE - d) / REPULSE * 2;
+                        p[i3]   += (dx/d) * force;
+                        p[i3+1] += (dy/d) * force;
+                    }
+                    p[i3] += v.x; p[i3+1] += v.y; p[i3+2] += v.z;
+                    if (Math.abs(p[i3]) > FIELD) v.x *= -1;
+                    if (Math.abs(p[i3+1]) > FIELD) v.y *= -1;
+                    if (Math.abs(p[i3+2]) > FIELD) v.z *= -1;
+                }
+                pGeo.attributes.position.needsUpdate = true;
+
+                // Lines
+                var lc = 0;
+                var la = lGeo.attributes.position.array;
+                var ca = lGeo.attributes.color.array;
+                for (var i = 0; i < PC; i++) {
+                    for (var j = i+1; j < PC; j++) {
+                        var dx = p[i*3]-p[j*3], dy = p[i*3+1]-p[j*3+1], dz = p[i*3+2]-p[j*3+2];
+                        var dd = Math.sqrt(dx*dx+dy*dy+dz*dz);
+                        if (dd < CONN) {
+                            var a = 1-(dd/CONN); var idx = lc*6;
+                            la[idx]=p[i*3]; la[idx+1]=p[i*3+1]; la[idx+2]=p[i*3+2];
+                            la[idx+3]=p[j*3]; la[idx+4]=p[j*3+1]; la[idx+5]=p[j*3+2];
+                            ca[idx]=0.66*a; ca[idx+1]=a; ca[idx+2]=0;
+                            ca[idx+3]=0.66*a; ca[idx+4]=a; ca[idx+5]=0;
+                            lc++;
+                        }
+                    }
+                }
+                lGeo.setDrawRange(0, lc*2);
+                lGeo.attributes.position.needsUpdate = true;
+                lGeo.attributes.color.needsUpdate = true;
+
+                pts.rotation.y += 0.0003;
+                pts.rotation.x += 0.00015;
+                lines.rotation.copy(pts.rotation);
+                camera.position.x += (mouse3D.x * 40 - camera.position.x) * 0.02;
+                camera.position.y += (mouse3D.y * 40 - camera.position.y) * 0.02;
+                camera.lookAt(scene.position);
+            };
+        }
+
+        // ────────────────────────────────────────
+        // WORK: Floating wireframe shapes that scatter from cursor
+        // ────────────────────────────────────────
+        else if (page === 'work') {
+            var shapes = [];
+            var SHAPE_COUNT = isMobile ? 12 : 25;
+            var geometries = [
+                new THREE.IcosahedronGeometry(15, 0),
+                new THREE.OctahedronGeometry(15, 0),
+                new THREE.TetrahedronGeometry(18, 0),
+                new THREE.DodecahedronGeometry(14, 0),
+                new THREE.BoxGeometry(18, 18, 18)
+            ];
+            var wireframeMat = new THREE.MeshBasicMaterial({ color:0xA8FF00, wireframe:true, transparent:true, opacity:0.35 });
+
+            for (var i = 0; i < SHAPE_COUNT; i++) {
+                var geo = geometries[Math.floor(Math.random() * geometries.length)];
+                var mesh = new THREE.Mesh(geo, wireframeMat.clone());
+                mesh.position.set((Math.random()-0.5)*700, (Math.random()-0.5)*500, (Math.random()-0.5)*400);
+                mesh.userData = {
+                    basePos: mesh.position.clone(),
+                    rotSpeed: { x:(Math.random()-0.5)*0.01, y:(Math.random()-0.5)*0.01, z:(Math.random()-0.5)*0.01 },
+                    floatOffset: Math.random() * Math.PI * 2,
+                    floatSpeed: 0.3 + Math.random() * 0.5,
+                    floatAmp: 10 + Math.random() * 20,
+                    displaced: new THREE.Vector3()
+                };
+                scene.add(mesh);
+                shapes.push(mesh);
+            }
+
+            var SCATTER_RADIUS = 200;
+            var time = 0;
+            animateFn = function() {
+                mouse3D.x += (mouse3D.tx - mouse3D.x) * 0.08;
+                mouse3D.y += (mouse3D.ty - mouse3D.y) * 0.08;
+                mouseWorld.set(mouse3D.x, mouse3D.y, 0.5).unproject(camera);
+                var dir = mouseWorld.sub(camera.position).normalize();
+                var dist = -camera.position.z / dir.z;
+                var mousePos = camera.position.clone().add(dir.multiplyScalar(dist));
+                time += 0.016;
+
+                for (var i = 0; i < shapes.length; i++) {
+                    var m = shapes[i]; var u = m.userData;
+                    // Float animation
+                    var floatY = Math.sin(time * u.floatSpeed + u.floatOffset) * u.floatAmp;
+                    var targetX = u.basePos.x;
+                    var targetY = u.basePos.y + floatY;
+                    var targetZ = u.basePos.z;
+
+                    // Scatter from mouse
+                    var dx = targetX - mousePos.x;
+                    var dy = targetY - mousePos.y;
+                    var d = Math.sqrt(dx*dx + dy*dy);
+                    if (d < SCATTER_RADIUS && d > 0) {
+                        var force = (SCATTER_RADIUS - d) / SCATTER_RADIUS;
+                        u.displaced.x += (dx/d) * force * 8;
+                        u.displaced.y += (dy/d) * force * 8;
+                    }
+                    u.displaced.multiplyScalar(0.92); // Dampen
+
+                    m.position.x += (targetX + u.displaced.x - m.position.x) * 0.06;
+                    m.position.y += (targetY + u.displaced.y - m.position.y) * 0.06;
+                    m.position.z += (targetZ - m.position.z) * 0.06;
+
+                    // Rotate toward mouse
+                    m.rotation.x += u.rotSpeed.x + mouse3D.y * 0.003;
+                    m.rotation.y += u.rotSpeed.y + mouse3D.x * 0.003;
+                    m.rotation.z += u.rotSpeed.z;
+
+                    // Glow near mouse
+                    var proximity = Math.max(0, 1 - d / SCATTER_RADIUS);
+                    m.material.opacity = 0.25 + proximity * 0.6;
+                }
+                camera.position.x += (mouse3D.x * 50 - camera.position.x) * 0.03;
+                camera.position.y += (mouse3D.y * 50 - camera.position.y) * 0.03;
+                camera.lookAt(scene.position);
+            };
+        }
+
+        // ────────────────────────────────────────
+        // ABOUT: Morphing wave terrain that follows mouse
+        // ────────────────────────────────────────
+        else if (page === 'about') {
+            var SEG = isMobile ? 40 : 80;
+            var planeGeo = new THREE.PlaneGeometry(800, 800, SEG, SEG);
+            var planeMat = new THREE.MeshBasicMaterial({ color:0xA8FF00, wireframe:true, transparent:true, opacity:0.2 });
+            var plane = new THREE.Mesh(planeGeo, planeMat);
+            plane.rotation.x = -Math.PI / 2.5;
+            plane.position.y = -150;
+            plane.position.z = -100;
+            scene.add(plane);
+
+            var basePositions = new Float32Array(planeGeo.attributes.position.array);
+            var waveTime = 0;
+            var mouseInfluence = { x: 0, y: 0 };
+
+            animateFn = function() {
+                mouse3D.x += (mouse3D.tx - mouse3D.x) * 0.08;
+                mouse3D.y += (mouse3D.ty - mouse3D.y) * 0.08;
+                mouseInfluence.x += (mouse3D.x * 400 - mouseInfluence.x) * 0.04;
+                mouseInfluence.y += (mouse3D.y * 400 - mouseInfluence.y) * 0.04;
+                waveTime += 0.015;
+
+                var pos = planeGeo.attributes.position.array;
+                for (var i = 0; i < pos.length; i += 3) {
+                    var bx = basePositions[i];
+                    var by = basePositions[i + 1];
+                    // Distance from mouse influence point
+                    var dx = bx - mouseInfluence.x;
+                    var dy = by - mouseInfluence.y;
+                    var dist = Math.sqrt(dx * dx + dy * dy);
+                    // Mouse creates a tall, focused peak
+                    var mousePeak = Math.exp(-dist * dist / 15000) * 60;
+                    // Ambient rolling waves
+                    var wave = Math.sin(bx * 0.01 + waveTime) * 15 +
+                               Math.sin(by * 0.012 + waveTime * 0.8) * 12 +
+                               Math.sin((bx + by) * 0.008 + waveTime * 1.3) * 8;
+                    pos[i + 2] = wave + mousePeak;
+                }
+                planeGeo.attributes.position.needsUpdate = true;
+
+                camera.position.x += (mouse3D.x * 60 - camera.position.x) * 0.02;
+                camera.position.y += (mouse3D.y * 30 + 100 - camera.position.y) * 0.02;
+                camera.lookAt(new THREE.Vector3(0, -100, -100));
+            };
+        }
+
+        // ────────────────────────────────────────
+        // CONTACT: Particle vortex/spiral that follows mouse
+        // ────────────────────────────────────────
+        else if (page === 'contact') {
+            var VORTEX_COUNT = isMobile ? 300 : 600;
+            var vPositions = new Float32Array(VORTEX_COUNT * 3);
+            var vParticles = [];
+            for (var i = 0; i < VORTEX_COUNT; i++) {
+                var angle = Math.random() * Math.PI * 2;
+                var radius = 50 + Math.random() * 250;
+                vPositions[i*3]   = Math.cos(angle) * radius;
+                vPositions[i*3+1] = Math.sin(angle) * radius;
+                vPositions[i*3+2] = (Math.random()-0.5) * 200;
+                vParticles.push({
+                    angle: angle,
+                    radius: radius,
+                    speed: 0.002 + Math.random() * 0.008,
+                    ySpeed: (Math.random()-0.5) * 0.3,
+                    baseZ: vPositions[i*3+2]
+                });
+            }
+            var vGeo = new THREE.BufferGeometry();
+            vGeo.setAttribute('position', new THREE.BufferAttribute(vPositions, 3));
+            var vMat = new THREE.PointsMaterial({ color:0xA8FF00, size:isMobile?2:1.8, transparent:true, opacity:0.7, sizeAttenuation:true });
+            var vPts = new THREE.Points(vGeo, vMat);
+            scene.add(vPts);
+
+            var vortexCenter = { x: 0, y: 0 };
+            animateFn = function() {
+                mouse3D.x += (mouse3D.tx - mouse3D.x) * 0.08;
+                mouse3D.y += (mouse3D.ty - mouse3D.y) * 0.08;
+                // Vortex center follows mouse
+                vortexCenter.x += (mouse3D.x * 200 - vortexCenter.x) * 0.04;
+                vortexCenter.y += (mouse3D.y * 200 - vortexCenter.y) * 0.04;
+
+                // Mouse speed affects vortex intensity
+                var mouseSpeed = Math.sqrt(mouse3D.tx * mouse3D.tx + mouse3D.ty * mouse3D.ty);
+                var speedMult = 1 + mouseSpeed * 3;
+
+                var p = vGeo.attributes.position.array;
+                for (var i = 0; i < VORTEX_COUNT; i++) {
+                    var vp = vParticles[i];
+                    vp.angle += vp.speed * speedMult;
+                    // Spiral inward/outward based on mouse proximity
+                    var targetR = vp.radius + Math.sin(vp.angle * 2) * 20;
+                    p[i*3]   = vortexCenter.x + Math.cos(vp.angle) * targetR;
+                    p[i*3+1] = vortexCenter.y + Math.sin(vp.angle) * targetR;
+                    p[i*3+2] = vp.baseZ + Math.sin(vp.angle * 3) * 30;
+                }
+                vGeo.attributes.position.needsUpdate = true;
+
+                camera.position.x += (mouse3D.x * 40 - camera.position.x) * 0.02;
+                camera.position.y += (mouse3D.y * 40 - camera.position.y) * 0.02;
+                camera.lookAt(scene.position);
+            };
+        }
+
+        // ────────────────────────────────────────
+        // MORE WORK: Floating cubes that tilt toward mouse
+        // ────────────────────────────────────────
+        else if (page === 'morework') {
+            var cubes = [];
+            var CUBE_COUNT = isMobile ? 15 : 30;
+            var cubeGeo = new THREE.BoxGeometry(12, 12, 12);
+            for (var i = 0; i < CUBE_COUNT; i++) {
+                var edgeMat = new THREE.MeshBasicMaterial({ color:0xA8FF00, wireframe:true, transparent:true, opacity:0.3 });
+                var cube = new THREE.Mesh(cubeGeo, edgeMat);
+                var scale = 0.5 + Math.random() * 2;
+                cube.scale.set(scale, scale, scale);
+                cube.position.set((Math.random()-0.5)*700, (Math.random()-0.5)*500, (Math.random()-0.5)*300);
+                cube.userData = {
+                    basePos: cube.position.clone(),
+                    orbitAngle: Math.random() * Math.PI * 2,
+                    orbitSpeed: 0.002 + Math.random() * 0.005,
+                    orbitRadius: 5 + Math.random() * 15,
+                    attracted: new THREE.Vector3()
+                };
+                scene.add(cube);
+                cubes.push(cube);
+            }
+
+            var ATTRACT_RADIUS = 250;
+            animateFn = function() {
+                mouse3D.x += (mouse3D.tx - mouse3D.x) * 0.08;
+                mouse3D.y += (mouse3D.ty - mouse3D.y) * 0.08;
+                mouseWorld.set(mouse3D.x, mouse3D.y, 0.5).unproject(camera);
+                var dir = mouseWorld.sub(camera.position).normalize();
+                var dist = -camera.position.z / dir.z;
+                var mousePos = camera.position.clone().add(dir.multiplyScalar(dist));
+
+                for (var i = 0; i < cubes.length; i++) {
+                    var c = cubes[i]; var u = c.userData;
+                    u.orbitAngle += u.orbitSpeed;
+                    var ox = u.basePos.x + Math.cos(u.orbitAngle) * u.orbitRadius;
+                    var oy = u.basePos.y + Math.sin(u.orbitAngle) * u.orbitRadius;
+
+                    // Attract toward mouse
+                    var dx = mousePos.x - ox;
+                    var dy = mousePos.y - oy;
+                    var d = Math.sqrt(dx*dx + dy*dy);
+                    if (d < ATTRACT_RADIUS && d > 0) {
+                        var force = (ATTRACT_RADIUS - d) / ATTRACT_RADIUS;
+                        u.attracted.x += (dx/d) * force * 3;
+                        u.attracted.y += (dy/d) * force * 3;
+                    }
+                    u.attracted.multiplyScalar(0.94);
+
+                    c.position.x += (ox + u.attracted.x - c.position.x) * 0.05;
+                    c.position.y += (oy + u.attracted.y - c.position.y) * 0.05;
+
+                    // Tilt toward mouse
+                    var tiltX = mouse3D.y * 0.5;
+                    var tiltY = mouse3D.x * 0.5;
+                    c.rotation.x += (tiltX - c.rotation.x) * 0.02 + 0.003;
+                    c.rotation.y += (tiltY - c.rotation.y) * 0.02 + 0.005;
+
+                    // Brightness by proximity
+                    var prox = Math.max(0, 1 - d / ATTRACT_RADIUS);
+                    c.material.opacity = 0.2 + prox * 0.65;
+                }
+                camera.position.x += (mouse3D.x * 40 - camera.position.x) * 0.02;
+                camera.position.y += (mouse3D.y * 40 - camera.position.y) * 0.02;
+                camera.lookAt(scene.position);
+            };
+        }
+
+        // Shared render loop
+        function renderLoop() {
+            animFrameId = requestAnimationFrame(renderLoop);
+            if (document.hidden) return;
+            if (animateFn) animateFn();
+            renderer.render(scene, camera);
+        }
+        renderLoop();
+
         window.addEventListener('beforeunload', function() {
             cancelAnimationFrame(animFrameId);
-            particleGeometry.dispose();
-            particleMaterial.dispose();
-            lineGeometry.dispose();
-            lineMaterial.dispose();
             renderer.dispose();
         });
-
-        animate();
     })();
 
     // --- Page Transition Logic ---
