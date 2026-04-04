@@ -79,7 +79,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const heroH1 = heroSection.querySelector('h1');
         const heroSubtitle = heroSection.querySelector('.subtitle');
         const heroCta = heroSection.querySelector('.hero-cta');
-        const heroCanvas = document.getElementById('hero-canvas');
 
         // ===== 1. TEXT SCRAMBLE / DECODE EFFECT =====
         const finalText = 'DIVSHAAN SINGH BRAR';
@@ -136,136 +135,196 @@ document.addEventListener('DOMContentLoaded', function() {
             ease: 'power3.out'
         }, '-=0.3');
 
-        // ===== 3. INTERACTIVE DOT GRID (CANVAS) =====
-        if (heroCanvas) {
-            const ctx = heroCanvas.getContext('2d');
-            const dotSpacing = 40;
-            const baseDotRadius = 1;
-            const maxDotRadius = 3;
-            const baseOpacity = 0.15;
-            const maxOpacity = 0.8;
-            const influenceRadius = 150;
-
-            let mouse = { x: -9999, y: -9999 };
-            let hasRealMouse = false;
-            let dots = [];
-            let animationId;
-
-            // Ambient wandering glow for mobile / no-mouse
-            const ambient = {
-                x: 0, y: 0,
-                targetX: 0, targetY: 0,
-                speed: 0.02
-            };
-
-            function pickNewAmbientTarget() {
-                ambient.targetX = Math.random() * heroCanvas.width;
-                ambient.targetY = Math.random() * heroCanvas.height;
-            }
-
-            function updateAmbient() {
-                ambient.x += (ambient.targetX - ambient.x) * ambient.speed;
-                ambient.y += (ambient.targetY - ambient.y) * ambient.speed;
-                // Pick a new target when close enough
-                const dx = ambient.targetX - ambient.x;
-                const dy = ambient.targetY - ambient.y;
-                if (Math.sqrt(dx * dx + dy * dy) < 30) {
-                    pickNewAmbientTarget();
-                }
-            }
-
-            function resizeHeroCanvas() {
-                heroCanvas.width = heroSection.offsetWidth;
-                heroCanvas.height = heroSection.offsetHeight;
-                buildDots();
-                pickNewAmbientTarget();
-                ambient.x = Math.random() * heroCanvas.width;
-                ambient.y = Math.random() * heroCanvas.height;
-            }
-
-            function buildDots() {
-                dots = [];
-                const cols = Math.ceil(heroCanvas.width / dotSpacing) + 1;
-                const rows = Math.ceil(heroCanvas.height / dotSpacing) + 1;
-                for (let r = 0; r < rows; r++) {
-                    for (let c = 0; c < cols; c++) {
-                        dots.push({
-                            x: c * dotSpacing,
-                            y: r * dotSpacing
-                        });
-                    }
-                }
-            }
-
-            function drawDots() {
-                ctx.clearRect(0, 0, heroCanvas.width, heroCanvas.height);
-
-                // Use real mouse if available, otherwise use ambient wandering glow
-                let glowX, glowY;
-                if (hasRealMouse && mouse.x > -9000) {
-                    glowX = mouse.x;
-                    glowY = mouse.y;
-                } else {
-                    updateAmbient();
-                    glowX = ambient.x;
-                    glowY = ambient.y;
-                }
-
-                for (let i = 0; i < dots.length; i++) {
-                    const dot = dots[i];
-                    const dx = glowX - dot.x;
-                    const dy = glowY - dot.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-
-                    let opacity = baseOpacity;
-                    let radius = baseDotRadius;
-
-                    if (dist < influenceRadius) {
-                        const t = 1 - (dist / influenceRadius);
-                        opacity = baseOpacity + (maxOpacity - baseOpacity) * t;
-                        radius = baseDotRadius + (maxDotRadius - baseDotRadius) * t;
-                    }
-
-                    ctx.beginPath();
-                    ctx.arc(dot.x, dot.y, radius, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(168, 255, 0, ${opacity})`;
-                    ctx.fill();
-                }
-
-                animationId = requestAnimationFrame(drawDots);
-            }
-
-            heroSection.addEventListener('mousemove', (e) => {
-                hasRealMouse = true;
-                const rect = heroCanvas.getBoundingClientRect();
-                mouse.x = e.clientX - rect.left;
-                mouse.y = e.clientY - rect.top;
-            });
-
-            heroSection.addEventListener('mouseleave', () => {
-                mouse.x = -9999;
-                mouse.y = -9999;
-            });
-
-            // Touch support
-            heroSection.addEventListener('touchmove', (e) => {
-                const rect = heroCanvas.getBoundingClientRect();
-                mouse.x = e.touches[0].clientX - rect.left;
-                mouse.y = e.touches[0].clientY - rect.top;
-                hasRealMouse = true;
-            });
-
-            heroSection.addEventListener('touchend', () => {
-                mouse.x = -9999;
-                mouse.y = -9999;
-                hasRealMouse = false;
-            });
-
-            window.addEventListener('resize', resizeHeroCanvas);
-            resizeHeroCanvas();
-            drawDots();
-        }
     }
+
+    // ===== 3D BACKGROUND PARTICLE NETWORK (THREE.JS) =====
+    (function init3DBackground() {
+        if (typeof THREE === 'undefined') return;
+
+        const container = document.getElementById('bg-animation');
+        if (!container) return;
+
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const isMobile = window.innerWidth < 768;
+        const PARTICLE_COUNT = isMobile ? 60 : 120;
+        const CONNECTION_DISTANCE = isMobile ? 120 : 150;
+        const FIELD_SIZE = 400;
+
+        // Scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+        camera.position.z = 350;
+
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setClearColor(0x000000, 0);
+        container.appendChild(renderer.domElement);
+
+        // Mouse tracking for parallax
+        const mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
+
+        // Create particles
+        const particlePositions = new Float32Array(PARTICLE_COUNT * 3);
+        const particleVelocities = [];
+
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            const i3 = i * 3;
+            particlePositions[i3] = (Math.random() - 0.5) * FIELD_SIZE * 2;
+            particlePositions[i3 + 1] = (Math.random() - 0.5) * FIELD_SIZE * 2;
+            particlePositions[i3 + 2] = (Math.random() - 0.5) * FIELD_SIZE * 2;
+
+            particleVelocities.push({
+                x: (Math.random() - 0.5) * 0.3,
+                y: (Math.random() - 0.5) * 0.3,
+                z: (Math.random() - 0.5) * 0.3
+            });
+        }
+
+        const particleGeometry = new THREE.BufferGeometry();
+        particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+
+        const particleMaterial = new THREE.PointsMaterial({
+            color: 0xA8FF00,
+            size: isMobile ? 2.5 : 2,
+            transparent: true,
+            opacity: 0.8,
+            sizeAttenuation: true
+        });
+
+        const points = new THREE.Points(particleGeometry, particleMaterial);
+        scene.add(points);
+
+        // Line connections
+        const maxLines = PARTICLE_COUNT * PARTICLE_COUNT;
+        const linePositions = new Float32Array(maxLines * 6);
+        const lineColors = new Float32Array(maxLines * 6);
+        const lineGeometry = new THREE.BufferGeometry();
+        lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+        lineGeometry.setAttribute('color', new THREE.BufferAttribute(lineColors, 3));
+        lineGeometry.setDrawRange(0, 0);
+
+        const lineMaterial = new THREE.LineBasicMaterial({
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.4,
+            blending: THREE.AdditiveBlending
+        });
+
+        const lineSegments = new THREE.LineSegments(lineGeometry, lineMaterial);
+        scene.add(lineSegments);
+
+        // Animation
+        let animFrameId;
+        const baseRotationSpeed = 0.0003;
+
+        function animate() {
+            animFrameId = requestAnimationFrame(animate);
+
+            if (document.hidden) return;
+
+            const positions = particleGeometry.attributes.position.array;
+
+            // Update particle positions
+            if (!prefersReducedMotion) {
+                for (let i = 0; i < PARTICLE_COUNT; i++) {
+                    const i3 = i * 3;
+                    const vel = particleVelocities[i];
+
+                    positions[i3] += vel.x;
+                    positions[i3 + 1] += vel.y;
+                    positions[i3 + 2] += vel.z;
+
+                    // Bounce off boundaries
+                    if (Math.abs(positions[i3]) > FIELD_SIZE) vel.x *= -1;
+                    if (Math.abs(positions[i3 + 1]) > FIELD_SIZE) vel.y *= -1;
+                    if (Math.abs(positions[i3 + 2]) > FIELD_SIZE) vel.z *= -1;
+                }
+                particleGeometry.attributes.position.needsUpdate = true;
+            }
+
+            // Update line connections
+            let lineCount = 0;
+            const lPos = lineGeometry.attributes.position.array;
+            const lCol = lineGeometry.attributes.color.array;
+
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                const i3 = i * 3;
+                for (let j = i + 1; j < PARTICLE_COUNT; j++) {
+                    const j3 = j * 3;
+                    const dx = positions[i3] - positions[j3];
+                    const dy = positions[i3 + 1] - positions[j3 + 1];
+                    const dz = positions[i3 + 2] - positions[j3 + 2];
+                    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+                    if (dist < CONNECTION_DISTANCE) {
+                        const alpha = 1 - (dist / CONNECTION_DISTANCE);
+                        const idx = lineCount * 6;
+
+                        lPos[idx] = positions[i3];
+                        lPos[idx + 1] = positions[i3 + 1];
+                        lPos[idx + 2] = positions[i3 + 2];
+                        lPos[idx + 3] = positions[j3];
+                        lPos[idx + 4] = positions[j3 + 1];
+                        lPos[idx + 5] = positions[j3 + 2];
+
+                        // Neon green with fading alpha (encoded in brightness)
+                        const r = 0.66 * alpha;
+                        const g = 1.0 * alpha;
+                        const b = 0.0 * alpha;
+                        lCol[idx] = r; lCol[idx + 1] = g; lCol[idx + 2] = b;
+                        lCol[idx + 3] = r; lCol[idx + 4] = g; lCol[idx + 5] = b;
+
+                        lineCount++;
+                    }
+                }
+            }
+            lineGeometry.setDrawRange(0, lineCount * 2);
+            lineGeometry.attributes.position.needsUpdate = true;
+            lineGeometry.attributes.color.needsUpdate = true;
+
+            // Subtle auto-rotation
+            if (!prefersReducedMotion) {
+                points.rotation.y += baseRotationSpeed;
+                points.rotation.x += baseRotationSpeed * 0.5;
+                lineSegments.rotation.y = points.rotation.y;
+                lineSegments.rotation.x = points.rotation.x;
+            }
+
+            // Smooth mouse parallax
+            mouse.x += (mouse.targetX - mouse.x) * 0.05;
+            mouse.y += (mouse.targetY - mouse.y) * 0.05;
+            camera.position.x = mouse.x * 30;
+            camera.position.y = -mouse.y * 30;
+            camera.lookAt(scene.position);
+
+            renderer.render(scene, camera);
+        }
+
+        // Event listeners
+        document.addEventListener('mousemove', function(e) {
+            mouse.targetX = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.targetY = (e.clientY / window.innerHeight) * 2 - 1;
+        });
+
+        window.addEventListener('resize', function() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            cancelAnimationFrame(animFrameId);
+            particleGeometry.dispose();
+            particleMaterial.dispose();
+            lineGeometry.dispose();
+            lineMaterial.dispose();
+            renderer.dispose();
+        });
+
+        animate();
+    })();
 
     // --- Page Transition Logic ---
     const transitionOverlay = document.getElementById('page-transition-overlay');
