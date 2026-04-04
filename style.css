@@ -241,6 +241,7 @@ h1, h2, h3, h4 {
 .project-card {
     border: 1px solid rgba(255, 255, 255, 0.2);
     transition: all 0.3s ease;
+    background-color: rgba(17, 17, 17, 0.85);
 }
 .project-card.clickable {
     cursor: pointer;
@@ -344,6 +345,9 @@ h1, h2, h3, h4 {
     grid-template-columns: 1fr 1.5fr; /* Refined balance for photo and text */
     gap: 3rem;
     align-items: center;
+    background-color: rgba(17, 17, 17, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 2rem;
 }
 .about-photo {
     justify-self: center; 
@@ -502,6 +506,7 @@ h1, h2, h3, h4 {
     padding: 6rem 0;
     text-align: center;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(17, 17, 17, 0.85);
 }
 .contact-subheading,
 #contact-cta p {

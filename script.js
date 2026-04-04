@@ -410,55 +410,52 @@ document.addEventListener('DOMContentLoaded', function() {
         // CONTACT: Particle vortex/spiral that follows mouse
         // ────────────────────────────────────────
         else if (page === 'contact') {
-            var VORTEX_COUNT = isMobile ? 300 : 600;
+            var VORTEX_COUNT = isMobile ? 100 : 200;
             var vPositions = new Float32Array(VORTEX_COUNT * 3);
             var vParticles = [];
             for (var i = 0; i < VORTEX_COUNT; i++) {
                 var angle = Math.random() * Math.PI * 2;
-                var radius = 50 + Math.random() * 250;
+                var radius = 80 + Math.random() * 300;
                 vPositions[i*3]   = Math.cos(angle) * radius;
                 vPositions[i*3+1] = Math.sin(angle) * radius;
-                vPositions[i*3+2] = (Math.random()-0.5) * 200;
+                vPositions[i*3+2] = (Math.random()-0.5) * 150;
                 vParticles.push({
                     angle: angle,
                     radius: radius,
-                    speed: 0.002 + Math.random() * 0.008,
-                    ySpeed: (Math.random()-0.5) * 0.3,
+                    speed: 0.001 + Math.random() * 0.003,
                     baseZ: vPositions[i*3+2]
                 });
             }
             var vGeo = new THREE.BufferGeometry();
             vGeo.setAttribute('position', new THREE.BufferAttribute(vPositions, 3));
-            var vMat = new THREE.PointsMaterial({ color:0xA8FF00, size:isMobile?2:1.8, transparent:true, opacity:0.7, sizeAttenuation:true });
+            var vMat = new THREE.PointsMaterial({ color:0xA8FF00, size:isMobile?2:1.5, transparent:true, opacity:0.4, sizeAttenuation:true });
             var vPts = new THREE.Points(vGeo, vMat);
             scene.add(vPts);
 
             var vortexCenter = { x: 0, y: 0 };
             animateFn = function() {
-                mouse3D.x += (mouse3D.tx - mouse3D.x) * 0.08;
-                mouse3D.y += (mouse3D.ty - mouse3D.y) * 0.08;
-                // Vortex center follows mouse
-                vortexCenter.x += (mouse3D.x * 200 - vortexCenter.x) * 0.04;
-                vortexCenter.y += (mouse3D.y * 200 - vortexCenter.y) * 0.04;
+                mouse3D.x += (mouse3D.tx - mouse3D.x) * 0.05;
+                mouse3D.y += (mouse3D.ty - mouse3D.y) * 0.05;
+                // Vortex center gently follows mouse
+                vortexCenter.x += (mouse3D.x * 120 - vortexCenter.x) * 0.02;
+                vortexCenter.y += (mouse3D.y * 120 - vortexCenter.y) * 0.02;
 
-                // Mouse speed affects vortex intensity
                 var mouseSpeed = Math.sqrt(mouse3D.tx * mouse3D.tx + mouse3D.ty * mouse3D.ty);
-                var speedMult = 1 + mouseSpeed * 3;
+                var speedMult = 1 + mouseSpeed * 1.2;
 
                 var p = vGeo.attributes.position.array;
                 for (var i = 0; i < VORTEX_COUNT; i++) {
                     var vp = vParticles[i];
                     vp.angle += vp.speed * speedMult;
-                    // Spiral inward/outward based on mouse proximity
-                    var targetR = vp.radius + Math.sin(vp.angle * 2) * 20;
+                    var targetR = vp.radius + Math.sin(vp.angle * 2) * 10;
                     p[i*3]   = vortexCenter.x + Math.cos(vp.angle) * targetR;
                     p[i*3+1] = vortexCenter.y + Math.sin(vp.angle) * targetR;
-                    p[i*3+2] = vp.baseZ + Math.sin(vp.angle * 3) * 30;
+                    p[i*3+2] = vp.baseZ + Math.sin(vp.angle * 3) * 15;
                 }
                 vGeo.attributes.position.needsUpdate = true;
 
-                camera.position.x += (mouse3D.x * 40 - camera.position.x) * 0.02;
-                camera.position.y += (mouse3D.y * 40 - camera.position.y) * 0.02;
+                camera.position.x += (mouse3D.x * 25 - camera.position.x) * 0.02;
+                camera.position.y += (mouse3D.y * 25 - camera.position.y) * 0.02;
                 camera.lookAt(scene.position);
             };
         }
