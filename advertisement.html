@@ -253,7 +253,7 @@
                     </div>
                     <model-viewer
                         id="sap-model-viewer"
-                        src="./3d1.glb"
+                        src="./assets/models/3d1.glb"
                         alt="Sapporo The Sabbatical 3D Model"
                         camera-controls
                         auto-rotate
@@ -272,7 +272,7 @@
                     function switchModel(btn, src) {
                         document.querySelectorAll('.model-switcher-btn').forEach(b => b.classList.remove('active'));
                         btn.classList.add('active');
-                        document.getElementById('sap-model-viewer').src = './' + src;
+                        document.getElementById('sap-model-viewer').src = 'assets/models/' + src;
                     }
                 </script>
             </div>
