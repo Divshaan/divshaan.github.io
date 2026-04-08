@@ -144,6 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!container) return;
 
         var isMobile = window.innerWidth < 768;
+        var starSizeScale = window.devicePixelRatio || 1;
         var mouse3D = { x: 0, y: 0, tx: 0, ty: 0 };
         var mouseWorld = new THREE.Vector3();
 
@@ -169,9 +170,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         window.addEventListener('resize', function() {
+            starSizeScale = window.devicePixelRatio || 1;
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         });
 
         // Detect page
@@ -373,7 +376,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 sPositions[i*3]   = (Math.random()-0.5) * 1200;
                 sPositions[i*3+1] = (Math.random()-0.5) * 800;
                 sPositions[i*3+2] = -200 + Math.random() * 200;
-                sSizes[i] = 2.5 + Math.random() * 4.5;
+                sSizes[i] = (2.5 + Math.random() * 4.5) * starSizeScale;
                 sBaseOpacities.push(0.3 + Math.random() * 0.7);
                 sPhases.push({
                     speed: 0.15 + Math.random() * 0.6,
@@ -465,7 +468,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     var ph = sPhases[i];
                     var twinkle = Math.sin(starTime * ph.speed + ph.offset);
                     var brightness = sBaseOpacities[i] + twinkle * ph.twinkleIntensity * 0.4;
-                    sizes[i] = Math.max(2, brightness * 5);
+                    sizes[i] = Math.max(2 * starSizeScale, brightness * 5 * starSizeScale);
 
                     // Stars near mouse glow brighter
                     var dx = sPositions[i*3] - mouseGlow.x;
@@ -473,7 +476,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     var dist = Math.sqrt(dx*dx + dy*dy);
                     if (dist < 150) {
                         var boost = (1 - dist/150) * 3;
-                        sizes[i] = Math.min(9, sizes[i] + boost);
+                        sizes[i] = Math.min(9 * starSizeScale, sizes[i] + boost * starSizeScale);
                     }
                 }
                 sGeo.attributes.size.needsUpdate = true;
