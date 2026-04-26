@@ -1,5 +1,74 @@
 document.addEventListener('DOMContentLoaded', function() {
 
+    // --- Custom Inverting Cursor ---
+    (function initCustomCursor() {
+        if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+
+        const cursor = document.createElement('div');
+        cursor.className = 'custom-cursor';
+        const inner = document.createElement('div');
+        inner.className = 'custom-cursor-inner';
+        cursor.appendChild(inner);
+        document.body.appendChild(cursor);
+
+        const radius = 16;
+        let targetX = window.innerWidth / 2;
+        let targetY = window.innerHeight / 2;
+        let currentX = targetX;
+        let currentY = targetY;
+        let hasMoved = false;
+        const lerpFactor = 0.2;
+
+        const hoverSelector = 'a, button, [role="button"], img, .contact-button, .btn-case-study, .btn-resume-download, .btn-submit, .hero-cta, .info-btn, .modal-close, .work-card, .project-card, .category-item';
+        const noScaleSelector = 'input, textarea';
+
+        document.addEventListener('mousemove', function(e) {
+            targetX = e.clientX;
+            targetY = e.clientY;
+            if (!hasMoved) {
+                hasMoved = true;
+                currentX = targetX;
+                currentY = targetY;
+                cursor.classList.add('visible');
+            }
+        });
+
+        document.addEventListener('mouseleave', function() {
+            cursor.classList.remove('visible');
+        });
+
+        document.addEventListener('mouseenter', function() {
+            if (hasMoved) cursor.classList.add('visible');
+        });
+
+        document.addEventListener('mouseover', function(e) {
+            const target = e.target;
+            if (target.closest && target.closest(noScaleSelector)) {
+                cursor.classList.remove('cursor-hover');
+            } else if (target.closest && target.closest(hoverSelector)) {
+                cursor.classList.add('cursor-hover');
+            }
+        });
+
+        document.addEventListener('mouseout', function(e) {
+            const target = e.target;
+            if (target.closest && target.closest(hoverSelector)) {
+                const related = e.relatedTarget;
+                if (!related || !related.closest || !related.closest(hoverSelector) || related.closest(noScaleSelector)) {
+                    cursor.classList.remove('cursor-hover');
+                }
+            }
+        });
+
+        function tick() {
+            currentX += (targetX - currentX) * lerpFactor;
+            currentY += (targetY - currentY) * lerpFactor;
+            cursor.style.transform = 'translate3d(' + (currentX - radius) + 'px, ' + (currentY - radius) + 'px, 0)';
+            requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+    })();
+
     // --- Scroll Reveal Observer ---
     (function initRevealSystem() {
         // Auto-stagger: add reveal classes to children of [data-stagger] containers
