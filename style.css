@@ -156,6 +156,7 @@ h1, h2, h3, h4 {
     max-width: 900px;
     margin: 0 auto;
 }
+.page-section h1,
 .page-section h2 {
     text-align: center;
     margin-bottom: 4rem;
@@ -1026,6 +1027,7 @@ footer {
     text-shadow: -2px 0 #00fff9;
     animation: glitch-clip-two 2s infinite linear alternate-reverse;
 }
+.error-page h1,
 .error-page h2 {
     font-size: 2.5rem;
     color: var(--text-color);
@@ -1192,9 +1194,45 @@ footer.visible p {
     .error-page .error-code {
         font-size: 8rem;
     }
+    .error-page h1,
     .error-page h2 {
         font-size: 2rem;
     }
+}
+
+/* Footer location meta line */
+.footer-meta {
+    font-size: 0.85rem;
+    opacity: 0.5;
+    margin-top: 0.25rem;
+    font-family: var(--font-secondary);
+}
+
+/* Related work block on project pages */
+.related-work {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+.related-work h3 {
+    color: var(--accent-color);
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    font-family: var(--font-secondary);
+}
+.related-grid {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+.related-link {
+    color: var(--text-color);
+    text-decoration: none;
+    font-family: var(--font-secondary);
+    transition: color 0.2s ease;
+}
+.related-link:hover {
+    color: var(--accent-color);
 }
 
 @media (max-width: 900px) {

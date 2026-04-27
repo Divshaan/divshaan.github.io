@@ -3,11 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="Explore the design portfolio of Divshaan Singh Brar, featuring projects in social media, UI/UX, print, advertising, and more.">
-    <title>Work - Divshaan Singh Brar</title>
+    <title>Work — Divshaan Singh Brar | Graphic Design Portfolio Brampton</title>
+    <meta name="description" content="Selected work by Divshaan Singh Brar — a Brampton-based graphic designer. Browse advertising campaigns, editorial design, UI/web projects, and more.">
+    <link rel="canonical" href="https://divshaan.design/work.html">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Divshaan Singh Brar — Portfolio">
+    <meta property="og:title" content="Work — Divshaan Singh Brar | Graphic Design Portfolio Brampton">
+    <meta property="og:description" content="Selected work by Divshaan Singh Brar — a Brampton-based graphic designer. Browse advertising campaigns, editorial design, UI/web projects, and more.">
+    <meta property="og:url" content="https://divshaan.design/work.html">
+    <meta property="og:image" content="https://divshaan.design/assets/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:locale" content="en_CA">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Work — Divshaan Singh Brar | Graphic Design Portfolio Brampton">
+    <meta name="twitter:description" content="Selected work by Divshaan Singh Brar — a Brampton-based graphic designer. Browse advertising campaigns, editorial design, UI/web projects, and more.">
+    <meta name="twitter:image" content="https://divshaan.design/assets/og-image.jpg">
+
+    <link rel="icon" type="image/svg+xml" href="/assets/logo.svg">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -43,7 +65,7 @@
     </header>
     <main>
         <section class="page-section">
-            <h2 class="reveal-heading">&lt;Work Categories /&gt;</h2>
+            <h1 class="reveal-heading">&lt;Work Categories /&gt;</h1>
             <div class="work-grid" data-stagger>
                 <a href="advertisement.html" class="work-card">
                     <div class="work-card-bg" style="background-image: url('./images/Adcamp1-07.jpg');"></div>
@@ -94,10 +116,19 @@
             <a href="https://rgd.ca/members/profile/241008117" target="_blank"><i class="bi bi-person-badge"></i> RGD PROFILE</a>
         </div>
         <p>&copy; 2025 Divshaan Singh Brar. All rights reserved.</p>
+        <p class="footer-meta">Brampton, Ontario · Canada</p>
     </footer>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="script.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script>
+      // Skip three.js on small viewports to improve mobile Core Web Vitals
+      if (window.innerWidth >= 768 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        var s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+        s.defer = true;
+        document.head.appendChild(s);
+      }
+    </script>
+    <script defer src="script.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
