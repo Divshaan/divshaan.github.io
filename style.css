@@ -233,77 +233,101 @@ h1, h2, h3, h4 {
     color: var(--background-color);
 }
 
-/* Hero foreground floating shapes */
-.hero-shapes {
+/* Hero frame — corner brackets and tag labels (HUD-style) */
+.hero-frame {
     position: absolute;
-    inset: 0;
+    inset: 1.5rem;
     pointer-events: none;
     z-index: 0;
 }
-.hero-shape {
+.hero-corner {
     position: absolute;
-    display: block;
-    will-change: transform;
+    width: 22px;
+    height: 22px;
+    border: 1.5px solid var(--accent-color);
     opacity: 0;
-    animation: hero-shape-fade-in 1.2s ease 0.4s forwards;
+    animation: hero-tag-fade 0.7s ease 0.15s forwards;
 }
-@keyframes hero-shape-fade-in {
+.hero-corner-tl { top: 0; left: 0; border-right: none; border-bottom: none; }
+.hero-corner-tr { top: 0; right: 0; border-left: none; border-bottom: none; }
+.hero-corner-bl { bottom: 0; left: 0; border-right: none; border-top: none; }
+.hero-corner-br { bottom: 0; right: 0; border-left: none; border-top: none; }
+
+.hero-tag {
+    position: absolute;
+    font-family: var(--font-secondary);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    color: rgba(255, 255, 255, 0.55);
+    z-index: 2;
+    pointer-events: none;
+    white-space: nowrap;
+    opacity: 0;
+    animation: hero-tag-fade 0.8s ease 0.35s forwards;
+}
+@keyframes hero-tag-fade {
     to { opacity: 1; }
 }
-.hero-shape-circle {
-    border: 1.5px solid var(--accent-color);
-    border-radius: 50%;
-    opacity: 0;
-    animation: hero-shape-fade-in 1.2s ease 0.4s forwards, hero-shape-pulse 4s ease-in-out infinite;
-}
-.hero-shape-ring {
-    border: 1px solid var(--accent-color);
-    border-radius: 50%;
-    opacity: 0;
-    animation: hero-shape-fade-ring 1.4s ease 0.5s forwards;
-}
-@keyframes hero-shape-fade-ring {
-    to { opacity: 0.35; }
-}
-.hero-shape-square {
-    border: 1.5px solid var(--accent-color);
-}
-.hero-shape-triangle {
-    background: var(--accent-color);
-    clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
-    opacity: 0;
-    animation: hero-shape-fade-tri 1.4s ease 0.5s forwards;
-}
-@keyframes hero-shape-fade-tri {
-    to { opacity: 0.5; }
-}
-.hero-shape-dot {
+.hero-tag-tl { top: 2.4rem; left: 2.8rem; }
+.hero-tag-tr { top: 2.4rem; right: 2.8rem; }
+.hero-tag-bl { bottom: 2.4rem; left: 2.8rem; }
+.hero-tag-br { bottom: 2.4rem; right: 2.8rem; }
+.hero-tag-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin: 0 0.4em;
     background: var(--accent-color);
     border-radius: 50%;
+    vertical-align: middle;
+    box-shadow: 0 0 8px var(--accent-color);
+    animation: hero-tag-blink 1.6s ease-in-out infinite;
 }
-.hero-shape-plus::before,
-.hero-shape-plus::after {
+@keyframes hero-tag-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.25; }
+}
+
+/* "<Designer />" label above the headline */
+.hero-label {
+    position: relative;
+    z-index: 1;
+    font-family: var(--font-secondary);
+    font-size: 0.85rem;
+    color: var(--accent-color);
+    letter-spacing: 0.15em;
+    margin-bottom: 1rem;
+    opacity: 0;
+    transform: translateY(8px);
+    animation: hero-label-in 0.7s ease 0.6s forwards;
+}
+@keyframes hero-label-in {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Headline glitch flicker — kicks in briefly between phrase swaps */
+.hero h1.glitching {
+    animation: hero-glitch 0.32s steps(2, end);
+}
+@keyframes hero-glitch {
+    0%   { transform: translate(0, 0); text-shadow: 2px 0 var(--accent-color), -2px 0 #ff00aa; }
+    25%  { transform: translate(-2px, 1px); text-shadow: -3px 0 var(--accent-color), 3px 0 #ff00aa; }
+    50%  { transform: translate(2px, -1px); text-shadow: 3px 0 var(--accent-color), -3px 0 #ff00aa; }
+    75%  { transform: translate(-1px, 2px); text-shadow: -2px 0 var(--accent-color), 2px 0 #ff00aa; }
+    100% { transform: translate(0, 0); text-shadow: none; }
+}
+
+/* Subtle dotted overlay across the hero — sells the HUD vibe */
+.hero::after {
     content: '';
     position: absolute;
-    background: var(--accent-color);
-}
-.hero-shape-plus::before {
-    width: 100%;
-    height: 2px;
-    top: 50%;
-    left: 0;
-    transform: translateY(-50%);
-}
-.hero-shape-plus::after {
-    width: 2px;
-    height: 100%;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-}
-@keyframes hero-shape-pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(168, 255, 0, 0.18); }
-    50% { box-shadow: 0 0 0 8px rgba(168, 255, 0, 0); }
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+    background-size: 22px 22px;
+    pointer-events: none;
+    z-index: 0;
+    mask-image: radial-gradient(ellipse at center, rgba(0,0,0,1) 35%, rgba(0,0,0,0) 80%);
+    -webkit-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,1) 35%, rgba(0,0,0,0) 80%);
 }
 
 /* Animated marker line under hero h1 */
@@ -352,13 +376,19 @@ h1, h2, h3, h4 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .hero-shape,
-    .hero-shape-circle,
+    .hero-corner,
+    .hero-tag,
+    .hero-tag-dot,
+    .hero-label,
     .hero-underline,
-    .hero-cta::before {
+    .hero-cta::before,
+    .hero h1.glitching {
         animation: none !important;
     }
-    .hero-shape { opacity: 0.5; }
+    .hero-corner,
+    .hero-tag,
+    .hero-label { opacity: 1 !important; }
+    .hero-label { transform: none !important; }
     .hero-underline { width: 220px; }
 }
 
@@ -1375,6 +1405,19 @@ footer.visible p {
         width: 100%;
         max-width: 100%;
     }
+    .hero-tag {
+        font-size: 0.6rem;
+        letter-spacing: 0.12em;
+    }
+    .hero-tag-tl, .hero-tag-tr { top: 1.4rem; }
+    .hero-tag-bl, .hero-tag-br { bottom: 1.4rem; }
+    .hero-tag-tl, .hero-tag-bl { left: 1.6rem; }
+    .hero-tag-tr, .hero-tag-br { right: 1.6rem; }
+}
+
+@media (max-width: 600px) {
+    .hero-tag-tr, .hero-tag-br { display: none; }
+    .hero-frame { inset: 0.8rem; }
 }
 
 @media (max-width: 480px) {
@@ -1547,17 +1590,20 @@ footer.visible p {
         width: 100%;
         height: 100%;
         background-color: #FFFFFF;
-        clip-path: inset(0 0 0 0);
+        /* Square — written as a 4-point polygon so it can interpolate with the
+           triangle polygon below without snapping. */
+        clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
         transition: clip-path 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         will-change: clip-path;
     }
 
     .custom-cursor.cursor-hover .custom-cursor-inner {
-        /* Triangle pointing up — tip sits at the cursor position.
-           Tip at (50%, 0%) with base spanning roughly the lower 70% of the
-           container, giving an isoceles triangle ~62px tall (smaller than the
-           88px square, larger than the previous 32px circle). */
-        clip-path: polygon(50% 0%, 85% 70%, 15% 70%);
+        /* Triangle — apex sits at the cursor position (50%, 0%). The first two
+           points share that apex so the path keeps the same point count as the
+           square, allowing a smooth morph. Base spans 15%–85% at 70% height,
+           giving an isoceles triangle ~62px tall: smaller than the 88px square,
+           larger than the original 32px circle. */
+        clip-path: polygon(50% 0%, 50% 0%, 85% 70%, 15% 70%);
     }
 }
 
