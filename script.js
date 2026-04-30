@@ -11,16 +11,40 @@ document.addEventListener('DOMContentLoaded', function() {
         cursor.appendChild(inner);
         document.body.appendChild(cursor);
 
-        const radius = 16;
+        const SIZE = 88;
+        const HALF = SIZE / 2;
         let targetX = window.innerWidth / 2;
         let targetY = window.innerHeight / 2;
         let currentX = targetX;
         let currentY = targetY;
         let hasMoved = false;
+        let isHovering = false;
         const lerpFactor = 0.2;
 
-        const hoverSelector = 'a, button, [role="button"], img, .contact-button, .btn-case-study, .btn-resume-download, .btn-submit, .hero-cta, .info-btn, .modal-close, .work-card, .project-card, .category-item';
+        const hoverSelector = 'a, button, [role="button"], img, video, iframe, .contact-button, .btn-case-study, .btn-resume-download, .btn-submit, .hero-cta, .info-btn, .modal-close, .work-card, .project-card, .project-image, .category-item, .image-gallery-grid, .single-image-container, .video-container, .video-embed-container, .carousel-item';
         const noScaleSelector = 'input, textarea';
+
+        function updateHoverState(x, y) {
+            // elementFromPoint is more reliable than mouseover bubbling for
+            // nested image containers — it always reports the top element under
+            // the cursor regardless of how the user got there.
+            const el = document.elementFromPoint(x, y);
+            if (!el) return;
+            if (el.closest(noScaleSelector)) {
+                if (isHovering) {
+                    cursor.classList.remove('cursor-hover');
+                    isHovering = false;
+                }
+            } else if (el.closest(hoverSelector)) {
+                if (!isHovering) {
+                    cursor.classList.add('cursor-hover');
+                    isHovering = true;
+                }
+            } else if (isHovering) {
+                cursor.classList.remove('cursor-hover');
+                isHovering = false;
+            }
+        }
 
         document.addEventListener('mousemove', function(e) {
             targetX = e.clientX;
@@ -31,6 +55,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentY = targetY;
                 cursor.classList.add('visible');
             }
+            updateHoverState(e.clientX, e.clientY);
         });
 
         document.addEventListener('mouseleave', function() {
@@ -41,29 +66,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (hasMoved) cursor.classList.add('visible');
         });
 
-        document.addEventListener('mouseover', function(e) {
-            const target = e.target;
-            if (target.closest && target.closest(noScaleSelector)) {
-                cursor.classList.remove('cursor-hover');
-            } else if (target.closest && target.closest(hoverSelector)) {
-                cursor.classList.add('cursor-hover');
-            }
-        });
-
-        document.addEventListener('mouseout', function(e) {
-            const target = e.target;
-            if (target.closest && target.closest(hoverSelector)) {
-                const related = e.relatedTarget;
-                if (!related || !related.closest || !related.closest(hoverSelector) || related.closest(noScaleSelector)) {
-                    cursor.classList.remove('cursor-hover');
-                }
-            }
-        });
-
         function tick() {
             currentX += (targetX - currentX) * lerpFactor;
             currentY += (targetY - currentY) * lerpFactor;
-            cursor.style.transform = 'translate3d(' + (currentX - radius) + 'px, ' + (currentY - radius) + 'px, 0)';
+            // Square is centered on the cursor; triangle tip (top-center of the
+            // 88px box) is anchored at the cursor for an easier-to-aim hotspot.
+            const offsetY = isHovering ? 0 : -HALF;
+            cursor.style.transform = 'translate3d(' + (currentX - HALF) + 'px, ' + (currentY + offsetY) + 'px, 0)';
             requestAnimationFrame(tick);
         }
         requestAnimationFrame(tick);
@@ -142,68 +151,88 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     })();
 
-    // --- Hero Section Animations ---
+    // --- Hero Section Animations + Glitching Phrase Rotator ---
     const heroSection = document.querySelector('.hero');
     if (heroSection && typeof gsap !== 'undefined') {
         const heroH1 = heroSection.querySelector('h1');
         const heroSubtitle = heroSection.querySelector('.subtitle');
         const heroCta = heroSection.querySelector('.hero-cta');
 
-        // ===== 1. TEXT SCRAMBLE / DECODE EFFECT =====
-        const finalText = 'DIVSHAAN SINGH BRAR';
+        const phrases = [
+            'DIVSHAAN SINGH BRAR',
+            'YOUR VISION, MY DESIGN',
+            'DESIGN IS THINKING VISUAL',
+            'FORM FOLLOWS FEELING',
+            'CREATE. ITERATE. SHIP.',
+            'PIXELS WITH PERSONALITY'
+        ];
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$%&*!?<>{}[]';
-        const scrambleDuration = 1500; // ms
-        const frameInterval = 40; // ms per frame
-        const totalFrames = scrambleDuration / frameInterval;
+        const frameInterval = 40;
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-        let currentFrame = 0;
-        heroH1.textContent = finalText.replace(/[^ ]/g, () => chars[Math.floor(Math.random() * chars.length)]);
-
-        const scrambleInterval = setInterval(() => {
-            currentFrame++;
-            const progress = currentFrame / totalFrames;
-            // Characters resolve left-to-right based on progress
-            const resolved = Math.floor(progress * finalText.length);
-
-            let display = '';
-            for (let i = 0; i < finalText.length; i++) {
-                if (finalText[i] === ' ') {
-                    display += ' ';
-                } else if (i < resolved) {
-                    display += finalText[i];
-                } else {
-                    display += chars[Math.floor(Math.random() * chars.length)];
+        function scrambleTo(targetText, duration) {
+            return new Promise(function(resolve) {
+                if (reducedMotion) {
+                    heroH1.textContent = targetText;
+                    resolve();
+                    return;
                 }
-            }
-            heroH1.textContent = display;
+                const totalFrames = Math.max(1, Math.round(duration / frameInterval));
+                let frame = 0;
+                heroH1.classList.add('glitching');
+                const interval = setInterval(function() {
+                    frame++;
+                    const progress = frame / totalFrames;
+                    const resolved = Math.floor(progress * targetText.length);
+                    let display = '';
+                    for (let i = 0; i < targetText.length; i++) {
+                        const ch = targetText[i];
+                        if (ch === ' ') display += ' ';
+                        else if (i < resolved) display += ch;
+                        else display += chars[Math.floor(Math.random() * chars.length)];
+                    }
+                    heroH1.textContent = display;
+                    if (frame >= totalFrames) {
+                        clearInterval(interval);
+                        heroH1.textContent = targetText;
+                        heroH1.classList.remove('glitching');
+                        resolve();
+                    }
+                }, frameInterval);
+            });
+        }
 
-            if (currentFrame >= totalFrames) {
-                clearInterval(scrambleInterval);
-                heroH1.textContent = finalText;
-            }
-        }, frameInterval);
+        // Initial scramble in
+        let phraseIndex = 0;
+        heroH1.textContent = phrases[0].replace(/[^ ]/g, function() {
+            return chars[Math.floor(Math.random() * chars.length)];
+        });
 
-        // ===== 2. STAGGERED ENTRANCE ANIMATIONS (GSAP) =====
+        // Staggered entrance via GSAP, then kick off the phrase rotator
         const tl = gsap.timeline();
-        tl.to(heroH1, {
-            opacity: 1,
-            y: 0,
-            duration: 0.8,
-            ease: 'power3.out'
-        })
-        .to(heroSubtitle, {
-            opacity: 1,
-            y: 0,
-            duration: 0.6,
-            ease: 'power3.out'
-        }, '-=0.5')
-        .to(heroCta, {
-            opacity: 1,
-            y: 0,
-            duration: 0.6,
-            ease: 'power3.out'
-        }, '-=0.3');
+        tl.to(heroH1, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' })
+          .to(heroSubtitle, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, '-=0.5')
+          .to(heroCta, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, '-=0.3');
 
+        scrambleTo(phrases[0], 1500).then(function rotate() {
+            if (reducedMotion) return;
+            // Brief pause on the resolved phrase, then glitch to the next.
+            const dwell = 3800 + Math.random() * 1200;
+            setTimeout(function() {
+                phraseIndex = (phraseIndex + 1) % phrases.length;
+                scrambleTo(phrases[phraseIndex], 1100).then(rotate);
+            }, dwell);
+        });
+
+        // Occasional micro-glitch flicker while a phrase is held — keeps the
+        // panel feeling alive without rescrambling the text.
+        if (!reducedMotion) {
+            setInterval(function() {
+                if (heroH1.classList.contains('glitching')) return;
+                heroH1.classList.add('glitching');
+                setTimeout(function() { heroH1.classList.remove('glitching'); }, 320);
+            }, 5200);
+        }
     }
 
     // ===== 3D BACKGROUND ANIMATIONS (PAGE-SPECIFIC) =====

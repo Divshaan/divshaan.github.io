@@ -233,6 +233,165 @@ h1, h2, h3, h4 {
     color: var(--background-color);
 }
 
+/* Hero frame — corner brackets and tag labels (HUD-style) */
+.hero-frame {
+    position: absolute;
+    inset: 1.5rem;
+    pointer-events: none;
+    z-index: 0;
+}
+.hero-corner {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border: 1.5px solid var(--accent-color);
+    opacity: 0;
+    animation: hero-tag-fade 0.7s ease 0.15s forwards;
+}
+.hero-corner-tl { top: 0; left: 0; border-right: none; border-bottom: none; }
+.hero-corner-tr { top: 0; right: 0; border-left: none; border-bottom: none; }
+.hero-corner-bl { bottom: 0; left: 0; border-right: none; border-top: none; }
+.hero-corner-br { bottom: 0; right: 0; border-left: none; border-top: none; }
+
+.hero-tag {
+    position: absolute;
+    font-family: var(--font-secondary);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    color: rgba(255, 255, 255, 0.55);
+    z-index: 2;
+    pointer-events: none;
+    white-space: nowrap;
+    opacity: 0;
+    animation: hero-tag-fade 0.8s ease 0.35s forwards;
+}
+@keyframes hero-tag-fade {
+    to { opacity: 1; }
+}
+.hero-tag-tl { top: 2.4rem; left: 2.8rem; }
+.hero-tag-tr { top: 2.4rem; right: 2.8rem; }
+.hero-tag-bl { bottom: 2.4rem; left: 2.8rem; }
+.hero-tag-br { bottom: 2.4rem; right: 2.8rem; }
+.hero-tag-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin: 0 0.4em;
+    background: var(--accent-color);
+    border-radius: 50%;
+    vertical-align: middle;
+    box-shadow: 0 0 8px var(--accent-color);
+    animation: hero-tag-blink 1.6s ease-in-out infinite;
+}
+@keyframes hero-tag-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.25; }
+}
+
+/* "<Designer />" label above the headline */
+.hero-label {
+    position: relative;
+    z-index: 1;
+    font-family: var(--font-secondary);
+    font-size: 0.85rem;
+    color: var(--accent-color);
+    letter-spacing: 0.15em;
+    margin-bottom: 1rem;
+    opacity: 0;
+    transform: translateY(8px);
+    animation: hero-label-in 0.7s ease 0.6s forwards;
+}
+@keyframes hero-label-in {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Headline glitch flicker — kicks in briefly between phrase swaps */
+.hero h1.glitching {
+    animation: hero-glitch 0.32s steps(2, end);
+}
+@keyframes hero-glitch {
+    0%   { transform: translate(0, 0); text-shadow: 2px 0 var(--accent-color), -2px 0 #ff00aa; }
+    25%  { transform: translate(-2px, 1px); text-shadow: -3px 0 var(--accent-color), 3px 0 #ff00aa; }
+    50%  { transform: translate(2px, -1px); text-shadow: 3px 0 var(--accent-color), -3px 0 #ff00aa; }
+    75%  { transform: translate(-1px, 2px); text-shadow: -2px 0 var(--accent-color), 2px 0 #ff00aa; }
+    100% { transform: translate(0, 0); text-shadow: none; }
+}
+
+/* Subtle dotted overlay across the hero — sells the HUD vibe */
+.hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+    background-size: 22px 22px;
+    pointer-events: none;
+    z-index: 0;
+    mask-image: radial-gradient(ellipse at center, rgba(0,0,0,1) 35%, rgba(0,0,0,0) 80%);
+    -webkit-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,1) 35%, rgba(0,0,0,0) 80%);
+}
+
+/* Animated marker line under hero h1 */
+.hero-underline {
+    display: block;
+    position: relative;
+    z-index: 1;
+    height: 2px;
+    width: 0;
+    background: var(--accent-color);
+    margin: 0.6rem auto 0;
+    box-shadow: 0 0 12px rgba(168, 255, 0, 0.45);
+    animation: hero-underline-grow 1.4s cubic-bezier(0.16, 1, 0.3, 1) 1.6s forwards,
+               hero-underline-breathe 3.2s ease-in-out 3s infinite;
+}
+@keyframes hero-underline-grow {
+    to { width: 220px; }
+}
+@keyframes hero-underline-breathe {
+    0%, 100% { opacity: 0.7; transform: scaleX(1); }
+    50% { opacity: 1; transform: scaleX(1.12); }
+}
+
+/* CTA ambient pulse + arrow nudge */
+.hero-cta {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+}
+.hero-cta::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border: 1px solid var(--accent-color);
+    opacity: 0;
+    animation: hero-cta-ring 2.6s ease-out infinite;
+    pointer-events: none;
+    z-index: -1;
+}
+@keyframes hero-cta-ring {
+    0% { transform: scale(1); opacity: 0.55; }
+    100% { transform: scale(1.25); opacity: 0; }
+}
+.hero-cta:hover::before {
+    animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-corner,
+    .hero-tag,
+    .hero-tag-dot,
+    .hero-label,
+    .hero-underline,
+    .hero-cta::before,
+    .hero h1.glitching {
+        animation: none !important;
+    }
+    .hero-corner,
+    .hero-tag,
+    .hero-label { opacity: 1 !important; }
+    .hero-label { transform: none !important; }
+    .hero-underline { width: 220px; }
+}
+
 /* Work Section on Homepage */
 .work-section {
     padding: 6rem 0;
@@ -1246,6 +1405,19 @@ footer.visible p {
         width: 100%;
         max-width: 100%;
     }
+    .hero-tag {
+        font-size: 0.6rem;
+        letter-spacing: 0.12em;
+    }
+    .hero-tag-tl, .hero-tag-tr { top: 1.4rem; }
+    .hero-tag-bl, .hero-tag-br { bottom: 1.4rem; }
+    .hero-tag-tl, .hero-tag-bl { left: 1.6rem; }
+    .hero-tag-tr, .hero-tag-br { right: 1.6rem; }
+}
+
+@media (max-width: 600px) {
+    .hero-tag-tr, .hero-tag-br { display: none; }
+    .hero-frame { inset: 0.8rem; }
 }
 
 @media (max-width: 480px) {
@@ -1400,8 +1572,8 @@ footer.visible p {
         position: fixed;
         top: 0;
         left: 0;
-        width: 32px;
-        height: 32px;
+        width: 88px;
+        height: 88px;
         pointer-events: none;
         z-index: 10000;
         opacity: 0;
@@ -1417,15 +1589,21 @@ footer.visible p {
     .custom-cursor-inner {
         width: 100%;
         height: 100%;
-        border-radius: 50%;
         background-color: #FFFFFF;
-        transform: scale(1);
-        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        will-change: transform;
+        /* Square — written as a 4-point polygon so it can interpolate with the
+           triangle polygon below without snapping. */
+        clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+        transition: clip-path 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        will-change: clip-path;
     }
 
     .custom-cursor.cursor-hover .custom-cursor-inner {
-        transform: scale(2.75);
+        /* Triangle — apex sits at the cursor position (50%, 0%). The first two
+           points share that apex so the path keeps the same point count as the
+           square, allowing a smooth morph. Base spans 15%–85% at 70% height,
+           giving an isoceles triangle ~62px tall: smaller than the 88px square,
+           larger than the original 32px circle. */
+        clip-path: polygon(50% 0%, 50% 0%, 85% 70%, 15% 70%);
     }
 }
 
