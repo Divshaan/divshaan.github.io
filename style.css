@@ -1428,3 +1428,132 @@ footer.visible p {
         transform: scale(2.75);
     }
 }
+
+/* ==================================================
+   Large Screen Optimizations (1440p, 1920p, 2K, 4K)
+   Scales typography via root font-size (rem cascade)
+   and widens content containers — especially work
+   pages that show galleries, video, or carousels.
+   ================================================== */
+
+/* Standard large desktops (≥1440px wide) */
+@media (min-width: 1440px) {
+    html {
+        font-size: 17px;
+    }
+    .page-section {
+        max-width: 1100px;
+    }
+    .page-section:has(.image-gallery-grid),
+    .page-section:has(.carousel-container),
+    .page-section:has(.video-embed-container),
+    .page-section:has(.single-image-container),
+    .page-section:has(.video-container) {
+        max-width: 70vw;
+    }
+    .modal-content {
+        max-width: 1400px;
+    }
+    .video-embed-container {
+        max-width: 1100px;
+    }
+    .work-grid {
+        max-width: 1000px;
+    }
+}
+
+/* QHD / 1080p+ (≥1920px wide) */
+@media (min-width: 1920px) {
+    html {
+        font-size: 18px;
+    }
+    .page-section {
+        max-width: 1300px;
+    }
+    .page-section:has(.image-gallery-grid),
+    .page-section:has(.carousel-container),
+    .page-section:has(.video-embed-container),
+    .page-section:has(.single-image-container),
+    .page-section:has(.video-container) {
+        max-width: 75vw;
+    }
+    .about-photo img {
+        max-width: 450px;
+    }
+    .modal-content {
+        max-width: 1600px;
+    }
+    .video-embed-container {
+        max-width: 1300px;
+    }
+    .page-section h1,
+    .page-section h2 {
+        font-size: 2.4rem;
+    }
+    .hero h1 {
+        font-size: 5vw;
+    }
+    .hero .subtitle {
+        font-size: 1.4rem;
+    }
+    .work-grid {
+        max-width: 1200px;
+    }
+    .carousel-item {
+        max-width: 600px;
+    }
+}
+
+/* 2K / 1440p screens (≥2560px wide) */
+@media (min-width: 2560px) {
+    html {
+        font-size: 20px;
+    }
+    .page-section {
+        max-width: 1500px;
+    }
+    .page-section:has(.image-gallery-grid),
+    .page-section:has(.carousel-container),
+    .page-section:has(.video-embed-container),
+    .page-section:has(.single-image-container),
+    .page-section:has(.video-container) {
+        max-width: 78vw;
+    }
+    .about-photo img {
+        max-width: 520px;
+    }
+    .modal-content {
+        max-width: 80vw;
+    }
+    .video-embed-container {
+        max-width: 1500px;
+    }
+    .page-section h1,
+    .page-section h2 {
+        font-size: 2.8rem;
+    }
+    .work-grid {
+        max-width: 1500px;
+        gap: 3rem;
+    }
+    .carousel-item {
+        max-width: 720px;
+    }
+}
+
+/* 4K / UHD (≥3440px wide) */
+@media (min-width: 3440px) {
+    html {
+        font-size: 22px;
+    }
+    .page-section:has(.image-gallery-grid),
+    .page-section:has(.carousel-container),
+    .page-section:has(.video-embed-container),
+    .page-section:has(.single-image-container),
+    .page-section:has(.video-container) {
+        max-width: 80vw;
+    }
+    .modal-content {
+        max-width: 82vw;
+    }
+}
