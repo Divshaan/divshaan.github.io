@@ -1075,4 +1075,90 @@ document.addEventListener('DOMContentLoaded', function() {
         resizeCanvas();
         startGame();
     }
+
+    // --- Ctrl-hover Image Preview ---
+    (function initImagePreview() {
+        if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+
+        let popup = null;
+        let popupImg = null;
+        let currentTarget = null;
+        let modifierDown = false;
+
+        function isPreviewable(el) {
+            if (!el || el.tagName !== 'IMG') return false;
+            if (el.classList.contains('logo-img')) return false;
+            if (el.hasAttribute('data-no-preview')) return false;
+            if (el.closest('[data-no-preview]')) return false;
+            return true;
+        }
+
+        function ensurePopup() {
+            if (popup) return;
+            popup = document.createElement('div');
+            popup.className = 'image-preview-popup';
+            popup.setAttribute('aria-hidden', 'true');
+            popupImg = document.createElement('img');
+            popupImg.alt = '';
+            popup.appendChild(popupImg);
+            document.body.appendChild(popup);
+        }
+
+        function showPopup(img) {
+            ensurePopup();
+            const src = img.currentSrc || img.src;
+            if (popupImg.getAttribute('src') !== src) popupImg.src = src;
+            popupImg.alt = img.alt || '';
+            popup.classList.add('is-visible');
+            currentTarget = img;
+        }
+
+        function hidePopup() {
+            if (!popup) return;
+            popup.classList.remove('is-visible');
+            currentTarget = null;
+        }
+
+        document.addEventListener('mouseover', (e) => {
+            if (!modifierDown) return;
+            const img = e.target.closest && e.target.closest('img');
+            if (img && isPreviewable(img) && img !== currentTarget) {
+                showPopup(img);
+            }
+        });
+
+        document.addEventListener('mouseout', (e) => {
+            if (!currentTarget) return;
+            const fromImg = e.target.closest && e.target.closest('img');
+            if (fromImg !== currentTarget) return;
+            const toEl = e.relatedTarget;
+            const toImg = toEl && toEl.closest ? toEl.closest('img') : null;
+            if (toImg && isPreviewable(toImg)) return;
+            hidePopup();
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key !== 'Control' && e.key !== 'Meta') return;
+            if (modifierDown) return;
+            modifierDown = true;
+            const hovered = document.querySelector('img:hover');
+            if (hovered && isPreviewable(hovered)) showPopup(hovered);
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key !== 'Control' && e.key !== 'Meta') return;
+            modifierDown = false;
+            hidePopup();
+        });
+
+        window.addEventListener('blur', () => {
+            modifierDown = false;
+            hidePopup();
+        });
+
+        window.addEventListener('contextmenu', () => {
+            modifierDown = false;
+            hidePopup();
+        });
+    })();
 });

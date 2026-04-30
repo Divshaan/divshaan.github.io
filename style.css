@@ -1735,3 +1735,35 @@ footer.visible p {
         max-width: 82vw;
     }
 }
+
+/* --- Ctrl-hover Image Preview --- */
+.image-preview-popup {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4vh 4vw;
+    background: rgba(0, 0, 0, 0.88);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 100000;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.15s ease, visibility 0.15s ease;
+}
+.image-preview-popup.is-visible {
+    opacity: 1;
+    visibility: visible;
+}
+.image-preview-popup img {
+    max-width: 92vw;
+    max-height: 92vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+    background: #111;
+    border-radius: 4px;
+}
