@@ -11,12 +11,14 @@ document.addEventListener('DOMContentLoaded', function() {
         cursor.appendChild(inner);
         document.body.appendChild(cursor);
 
-        const radius = 16;
+        const SIZE = 88;
+        const HALF = SIZE / 2;
         let targetX = window.innerWidth / 2;
         let targetY = window.innerHeight / 2;
         let currentX = targetX;
         let currentY = targetY;
         let hasMoved = false;
+        let isHovering = false;
         const lerpFactor = 0.2;
 
         const hoverSelector = 'a, button, [role="button"], img, .contact-button, .btn-case-study, .btn-resume-download, .btn-submit, .hero-cta, .info-btn, .modal-close, .work-card, .project-card, .category-item';
@@ -45,8 +47,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const target = e.target;
             if (target.closest && target.closest(noScaleSelector)) {
                 cursor.classList.remove('cursor-hover');
+                isHovering = false;
             } else if (target.closest && target.closest(hoverSelector)) {
                 cursor.classList.add('cursor-hover');
+                isHovering = true;
             }
         });
 
@@ -56,6 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const related = e.relatedTarget;
                 if (!related || !related.closest || !related.closest(hoverSelector) || related.closest(noScaleSelector)) {
                     cursor.classList.remove('cursor-hover');
+                    isHovering = false;
                 }
             }
         });
@@ -63,7 +68,10 @@ document.addEventListener('DOMContentLoaded', function() {
         function tick() {
             currentX += (targetX - currentX) * lerpFactor;
             currentY += (targetY - currentY) * lerpFactor;
-            cursor.style.transform = 'translate3d(' + (currentX - radius) + 'px, ' + (currentY - radius) + 'px, 0)';
+            // Square is centered on the cursor; triangle tip (top-center of the
+            // 88px box) is anchored at the cursor for an easier-to-aim hotspot.
+            const offsetY = isHovering ? 0 : -HALF;
+            cursor.style.transform = 'translate3d(' + (currentX - HALF) + 'px, ' + (currentY + offsetY) + 'px, 0)';
             requestAnimationFrame(tick);
         }
         requestAnimationFrame(tick);
@@ -140,6 +148,64 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }, 300);
         }
+    })();
+
+    // --- Hero Foreground Floating Shapes ---
+    (function initHeroShapes() {
+        const hero = document.querySelector('.hero');
+        if (!hero) return;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        const layer = document.createElement('div');
+        layer.className = 'hero-shapes';
+        // Insert before any text content so shapes sit behind the headings
+        hero.insertBefore(layer, hero.firstChild);
+
+        const defs = [
+            { type: 'circle',   x: 10, y: 22, size: 70,  depth: 0.05, speed: 0.0007, phase: 0.0, rotAmp: 0  },
+            { type: 'triangle', x: 82, y: 18, size: 50,  depth: 0.08, speed: 0.0009, phase: 1.4, rotAmp: 25 },
+            { type: 'square',   x: 16, y: 76, size: 60,  depth: 0.06, speed: 0.0006, phase: 2.6, rotAmp: 35 },
+            { type: 'ring',     x: 86, y: 70, size: 110, depth: 0.04, speed: 0.0005, phase: 0.7, rotAmp: 0  },
+            { type: 'plus',     x: 50, y: 12, size: 26,  depth: 0.10, speed: 0.0011, phase: 3.5, rotAmp: 90 },
+            { type: 'dot',      x: 62, y: 84, size: 10,  depth: 0.12, speed: 0.0010, phase: 4.2, rotAmp: 0  },
+            { type: 'dot',      x: 30, y: 40, size: 6,   depth: 0.14, speed: 0.0013, phase: 5.0, rotAmp: 0  },
+            { type: 'plus',     x: 92, y: 42, size: 18,  depth: 0.09, speed: 0.0012, phase: 1.8, rotAmp: 60 }
+        ];
+
+        const shapes = defs.map(def => {
+            const el = document.createElement('span');
+            el.className = 'hero-shape hero-shape-' + def.type;
+            el.style.left = def.x + '%';
+            el.style.top = def.y + '%';
+            el.style.width = def.size + 'px';
+            el.style.height = def.size + 'px';
+            layer.appendChild(el);
+            return Object.assign({ el }, def);
+        });
+
+        let mx = 0, my = 0, tmx = 0, tmy = 0;
+        hero.addEventListener('mousemove', function(e) {
+            const rect = hero.getBoundingClientRect();
+            tmx = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+            tmy = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+        });
+        hero.addEventListener('mouseleave', function() { tmx = 0; tmy = 0; });
+
+        function tickShapes(t) {
+            mx += (tmx - mx) * 0.06;
+            my += (tmy - my) * 0.06;
+            for (let i = 0; i < shapes.length; i++) {
+                const s = shapes[i];
+                const fx = Math.sin(t * s.speed + s.phase) * 14;
+                const fy = Math.cos(t * s.speed * 1.1 + s.phase) * 14;
+                const px = -mx * 80 * s.depth;
+                const py = -my * 80 * s.depth;
+                const rot = s.rotAmp ? Math.sin(t * s.speed * 0.6 + s.phase) * s.rotAmp : 0;
+                s.el.style.transform = 'translate3d(' + (fx + px) + 'px, ' + (fy + py) + 'px, 0) rotate(' + rot + 'deg)';
+            }
+            requestAnimationFrame(tickShapes);
+        }
+        requestAnimationFrame(tickShapes);
     })();
 
     // --- Hero Section Animations ---
