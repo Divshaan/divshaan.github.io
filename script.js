@@ -6,9 +6,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const cursor = document.createElement('div');
         cursor.className = 'custom-cursor';
-        const inner = document.createElement('div');
-        inner.className = 'custom-cursor-inner';
-        cursor.appendChild(inner);
+        const dot = document.createElement('div');
+        dot.className = 'custom-cursor-inner custom-cursor-dot';
+        const tri = document.createElement('div');
+        tri.className = 'custom-cursor-inner custom-cursor-tri';
+        cursor.appendChild(dot);
+        cursor.appendChild(tri);
         document.body.appendChild(cursor);
 
         const SIZE = 88;

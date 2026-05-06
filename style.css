@@ -1587,23 +1587,47 @@ footer.visible p {
     }
 
     .custom-cursor-inner {
-        width: 100%;
-        height: 100%;
-        background-color: #FFFFFF;
-        /* Square — written as a 4-point polygon so it can interpolate with the
-           triangle polygon below without snapping. */
-        clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
-        transition: clip-path 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        will-change: clip-path;
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
     }
 
-    .custom-cursor.cursor-hover .custom-cursor-inner {
-        /* Triangle — apex sits at the cursor position (50%, 0%). The first two
-           points share that apex so the path keeps the same point count as the
-           square, allowing a smooth morph. Base spans 15%–85% at 70% height,
-           giving an isoceles triangle ~62px tall: smaller than the 88px square,
-           larger than the original 32px circle. */
-        clip-path: polygon(50% 0%, 50% 0%, 85% 70%, 15% 70%);
+    /* Default — small white circle, ~22px, centered in the 88px hotspot box. */
+    .custom-cursor-dot {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 22px;
+        height: 22px;
+        margin: -11px 0 0 -11px;
+        background-color: #FFFFFF;
+        border-radius: 50%;
+        opacity: 1;
+        transition: opacity 0.18s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        will-change: opacity, transform;
+    }
+
+    /* Click target — triangle whose apex sits at the cursor (50%, 0%). */
+    .custom-cursor-tri {
+        position: absolute;
+        inset: 0;
+        background-color: #FFFFFF;
+        clip-path: polygon(50% 0%, 85% 70%, 15% 70%);
+        opacity: 0;
+        transform: scale(0.7);
+        transform-origin: 50% 0%;
+        transition: opacity 0.18s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        will-change: opacity, transform;
+    }
+
+    .custom-cursor.cursor-hover .custom-cursor-dot {
+        opacity: 0;
+        transform: scale(0.4);
+    }
+
+    .custom-cursor.cursor-hover .custom-cursor-tri {
+        opacity: 1;
+        transform: scale(1);
     }
 }
 
@@ -1920,16 +1944,23 @@ footer.visible p {
   filter: grayscale(80%); transition: filter 0.4s ease;
 }
 .work-project-card:hover img { filter: grayscale(0%); }
-.work-project-card iframe {
+.work-project-card-iframe {
   position: absolute;
   top: 0; left: 0;
-  width: 100%; height: 100%;
+  width: 200%; height: 200%;
+  transform: scale(0.5);
+  transform-origin: top left;
   border: 0;
   pointer-events: none;
   filter: grayscale(80%);
   transition: filter 0.4s ease;
 }
-.work-project-card:hover iframe { filter: grayscale(0%); }
+.work-project-card:hover .work-project-card-iframe { filter: grayscale(0%); }
+.work-project-card-iframe-shield {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
 .work-project-card-content {
   position: absolute;
   bottom: 0; left: 0; right: 0;
