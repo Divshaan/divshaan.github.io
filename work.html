@@ -33,23 +33,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        /* Styles for the YouTube iframe background */
-        .work-card .youtube-bg {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 150%; /* Overscale to ensure no black bars */
-            height: 150%;
-            transform: translate(-50%, -50%);
-            pointer-events: none; /* Allows the link to be clicked */
-            filter: grayscale(100%);
-            transition: filter 0.4s ease, transform 0.4s ease;
-        }
-        .work-card:hover .youtube-bg {
-            filter: grayscale(0%);
-        }
-    </style>
 </head>
 <body>
     <div id="bg-animation"></div>
@@ -65,47 +48,135 @@
     </header>
     <main>
         <section class="page-section">
-            <h1 class="reveal-heading">&lt;Work Categories /&gt;</h1>
-            <div class="work-grid" data-stagger>
-                <a href="advertisement.html" class="work-card">
-                    <div class="work-card-bg" style="background-image: url('./images/Adcamp1-07.jpg');"></div>
-                    <div class="work-card-overlay"></div>
-                    <div class="work-card-content">
-                        <h3>Advertisement</h3>
-                        <p>Integrated brand campaigns.</p>
+            <h1 class="reveal-heading">&lt;Selected Work /&gt;</h1>
+
+            <div class="work-filters reveal">
+                <button class="work-filter-btn active" data-filter="all">All</button>
+                <button class="work-filter-btn" data-filter="advertisement">Advertisement</button>
+                <button class="work-filter-btn" data-filter="editorial">Editorial</button>
+                <button class="work-filter-btn" data-filter="web">Web &amp; UI</button>
+            </div>
+
+            <div class="work-projects-grid" data-stagger>
+                <a href="work/depop.html" class="work-project-card" data-category="advertisement">
+                    <img src="./images/Adcamp1-07.jpg" alt="Depop integrated campaign — campaign cover artwork" loading="lazy" decoding="async">
+                    <div class="work-project-card-content">
+                        <span class="work-project-card-cat">Advertisement</span>
+                        <h3 class="work-project-card-title">Depop: Integrated Campaign</h3>
                     </div>
                 </a>
-                <a href="editorial.html" class="work-card">
-                    <div class="work-card-bg" style="background-image: url('./images/edim.png');"></div>
-                    <div class="work-card-overlay"></div>
-                    <div class="work-card-content">
-                        <h3>Editorial</h3>
-                        <p>Branding & layout design.</p>
+
+                <a href="work/duolingo.html" class="work-project-card" data-category="advertisement">
+                    <img src="./images/duo1.jpg" alt="Duolingo Valentine's campaign — opening visual" loading="lazy" decoding="async">
+                    <div class="work-project-card-content">
+                        <span class="work-project-card-cat">Advertisement</span>
+                        <h3 class="work-project-card-title">Duolingo: Let Duo Play The Cupid</h3>
                     </div>
                 </a>
-                <a href="ui-design.html" class="work-card">
-                    <div class="work-card-bg" style="background-image: url('./images/webm.png');"></div>
-                    <div class="work-card-overlay"></div>
-                    <div class="work-card-content">
-                        <h3>UI/Web Design</h3>
-                        <p>Intuitive digital experiences.</p>
+
+                <a href="work/sapporo-sabbatical.html" class="work-project-card" data-category="advertisement">
+                    <img src="./images/sap3.png" alt="Sapporo The Sabbatical — Venetian canal scene with paper wine bottle on a gondola" loading="lazy" decoding="async">
+                    <div class="work-project-card-content">
+                        <span class="work-project-card-cat">Advertisement</span>
+                        <h3 class="work-project-card-title">Sapporo: The Sabbatical</h3>
                     </div>
                 </a>
-                <a href="more-work.html" class="work-card">
-                    <div class="work-card-bg">
-                        <iframe 
-                            class="youtube-bg"
-                            src="https://www.youtube.com/embed/ptXOB2eyZpI?autoplay=1&mute=1&loop=1&playlist=ptXOB2eyZpI&controls=0&showinfo=0&autohide=1&modestbranding=1" 
-                            frameborder="0" 
-                            allow="autoplay; encrypted-media">
-                        </iframe>
-                    </div>
-                    <div class="work-card-overlay"></div>
-                    <div class="work-card-content">
-                        <h3>More Projects</h3>
-                        <p>A collection of other creative work.</p>
+
+                <a href="work/red-cross-panic.html" class="work-project-card" data-category="advertisement">
+                    <img src="./images/rc1.png" alt="Canadian Red Cross — bus shelter: Panic is optional. Training isn't." loading="lazy" decoding="async">
+                    <div class="work-project-card-content">
+                        <span class="work-project-card-cat">Advertisement</span>
+                        <h3 class="work-project-card-title">Canadian Red Cross: Panic is Optional</h3>
                     </div>
                 </a>
+
+                <a href="work/owned-steam.html" class="work-project-card" data-category="advertisement">
+                    <img src="./images/bilboard.png" alt="OWNED Steam campaign — OOH billboard featuring an exclusive character behind cage bars" loading="lazy" decoding="async">
+                    <div class="work-project-card-content">
+                        <span class="work-project-card-cat">Advertisement</span>
+                        <h3 class="work-project-card-title">OWNED — Steam</h3>
+                    </div>
+                </a>
+
+                <a href="work/philips-smart-sleep.html" class="work-project-card" data-category="advertisement">
+                    <img src="./images/Philips_OOH_Campaign-6.png" alt="Philips Smart Sleep — billboard mockup: Sunrise built you. A buzzer broke you." loading="lazy" decoding="async">
+                    <div class="work-project-card-content">
+                        <span class="work-project-card-cat">Advertisement</span>
+                        <h3 class="work-project-card-title">Philips Smart Sleep: Wake Like A Human</h3>
+                    </div>
+                </a>
+
+                <a href="work/xbox-beyond-box.html" class="work-project-card" data-category="advertisement">
+                    <img src="./images/xbox.png" alt="Xbox BEYOND BOX campaign — concept poster" loading="lazy" decoding="async">
+                    <div class="work-project-card-content">
+                        <span class="work-project-card-cat">Advertisement</span>
+                        <h3 class="work-project-card-title">Xbox: BEYOND BOX</h3>
+                    </div>
+                </a>
+
+                <a href="work/gamescom-editorial.html" class="work-project-card" data-category="editorial">
+                    <img src="./images/edim.png" alt="Gamescom event branding — promotional poster mockup" loading="lazy" decoding="async">
+                    <div class="work-project-card-content">
+                        <span class="work-project-card-cat">Editorial</span>
+                        <h3 class="work-project-card-title">Gamescom: Editorial &amp; Event Branding</h3>
+                    </div>
+                </a>
+
+                <a href="work/tanya-talaga.html" class="work-project-card" data-category="editorial">
+                    <img src="./images/Bookletm.png" alt="Tanya Talaga editorial — printed booklet mockup" loading="lazy" decoding="async">
+                    <div class="work-project-card-content">
+                        <span class="work-project-card-cat">Editorial</span>
+                        <h3 class="work-project-card-title">Tanya Talaga: Rewriting Canadian History</h3>
+                    </div>
+                </a>
+
+                <a href="work/gamescom-ui.html" class="work-project-card" data-category="web">
+                    <img src="./images/webm.png" alt="Gamescom 2024 website redesign — desktop browser mockup" loading="lazy" decoding="async">
+                    <div class="work-project-card-content">
+                        <span class="work-project-card-cat">Web &amp; UI</span>
+                        <h3 class="work-project-card-title">Gamescom 2024: Website Redesign</h3>
+                    </div>
+                </a>
+
+                <!-- TODO: swap in real screenshot once available -->
+                <a href="work/berkshire-hathaway.html" class="work-project-card" data-category="web">
+                    <img src="./images/web-placeholder.png" alt="Berkshire Hathaway website redesign placeholder" loading="lazy" decoding="async">
+                    <div class="work-project-card-content">
+                        <span class="work-project-card-cat">Web &amp; UI</span>
+                        <h3 class="work-project-card-title">Berkshire Hathaway: Website Redesign</h3>
+                    </div>
+                </a>
+
+                <!-- TODO: swap in real screenshot once available -->
+                <a href="work/khushman-law.html" class="work-project-card" data-category="web">
+                    <img src="./images/web-placeholder.png" alt="Khushman Dhillon Law website placeholder" loading="lazy" decoding="async">
+                    <div class="work-project-card-content">
+                        <span class="work-project-card-cat">Web &amp; UI</span>
+                        <h3 class="work-project-card-title">Khushman Dhillon Law</h3>
+                    </div>
+                </a>
+
+                <!-- TODO: swap in real screenshot once available -->
+                <a href="work/portfolio-site.html" class="work-project-card" data-category="web">
+                    <img src="./images/web-placeholder.png" alt="Portfolio website placeholder" loading="lazy" decoding="async">
+                    <div class="work-project-card-content">
+                        <span class="work-project-card-cat">Web &amp; UI</span>
+                        <h3 class="work-project-card-title">Portfolio Website</h3>
+                    </div>
+                </a>
+
+                <!-- TODO: swap in real screenshot once available -->
+                <a href="work/fstv.html" class="work-project-card" data-category="web">
+                    <img src="./images/web-placeholder.png" alt="FSTV website placeholder" loading="lazy" decoding="async">
+                    <div class="work-project-card-content">
+                        <span class="work-project-card-cat">Web &amp; UI</span>
+                        <h3 class="work-project-card-title">FSTV</h3>
+                    </div>
+                </a>
+            </div>
+
+            <div class="view-all-work-container reveal">
+                <a href="more-work.html" class="contact-button">More Projects</a>
             </div>
         </section>
     </main>
