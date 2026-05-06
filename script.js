@@ -1161,4 +1161,26 @@ document.addEventListener('DOMContentLoaded', function() {
             hidePopup();
         });
     })();
+
+    (function initWorkFilters() {
+      const filterBtns = document.querySelectorAll('.work-filter-btn');
+      const cards = document.querySelectorAll('.work-project-card');
+      if (!filterBtns.length || !cards.length) return;
+
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const cat = btn.dataset.filter;
+          filterBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          cards.forEach(card => {
+            const cardCat = card.dataset.category;
+            if (cat === 'all' || cardCat === cat) {
+              card.classList.remove('is-hidden');
+            } else {
+              card.classList.add('is-hidden');
+            }
+          });
+        });
+      });
+    })();
 });
