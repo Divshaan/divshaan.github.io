@@ -129,7 +129,7 @@ p + p { margin-top: 1em; }
 /* Print marks ------------------------------------------------------------- */
 /* Crop marks — four L-shaped ticks sitting just outside a frame */
 .crop { position: relative; }
-.crop > .crop__m { position: absolute; width: 14px; height: 14px; pointer-events: none; color: var(--rule-strong); }
+.crop__m { position: absolute; width: 14px; height: 14px; pointer-events: none; color: var(--rule-strong); }
 .crop__m::before, .crop__m::after { content: ''; position: absolute; background: currentColor; }
 .crop__m::before { width: 100%; height: 1px; }
 .crop__m::after { width: 1px; height: 100%; }
