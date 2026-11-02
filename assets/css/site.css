@@ -663,6 +663,10 @@ body.menu-open .hdr .avail, body.menu-open .hdr__logo .dot { background: var(--i
 .js [data-split] .w { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .06em; margin-bottom: -.06em; }
 .js [data-split] .w > span { display: inline-block; translate: 0 106%; transition: translate 1s var(--ease-out); transition-delay: calc(var(--i, 0) * 55ms + var(--d, 0ms)); }
 .js [data-split].is-in .w > span { translate: none; }
+/* Italic serif words overhang left and descend deep: give their mask room so g, y and s aren't clipped */
+.js [data-split] .serif .w { padding: 0 .12em .3em; margin: 0 -.12em -.3em; }
+.js [data-split] .serif .w > span { translate: 0 150%; }
+.js [data-split].is-in .serif .w > span { translate: none; }
 .js .print-in {
   -webkit-mask:
     linear-gradient(to bottom, #000 var(--sweep), transparent calc(var(--sweep) + 18%)),
