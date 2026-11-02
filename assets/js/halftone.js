@@ -33,6 +33,7 @@ uniform float uGainB;
 uniform vec3 uInk;
 uniform vec3 uDot;
 uniform vec3 uLime;
+uniform vec2 uVel;
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float luma(vec3 c) { return dot(c, vec3(0.299, 0.587, 0.114)); }
@@ -65,7 +66,14 @@ void main() {
   float intro = smoothstep(order * 0.75, order * 0.75 + 0.25, uIntro);
 
   float breathe = 1.0 + 0.08 * sin(uTime * 1.25 + h * 6.2831);
-  float dm = distance(p, uMouse);
+  // Liquid lens: measure distance in a space stretched along the pointer's motion,
+  // so the glass elongates when dragged and wobbles back when it stops.
+  vec2 rel = p - uMouse;
+  float sAmt = length(uVel);
+  vec2 sDir = sAmt > 0.0001 ? uVel / sAmt : vec2(1.0, 0.0);
+  float along = dot(rel, sDir);
+  vec2 relS = sDir * (along / (1.0 + sAmt)) + (rel - sDir * along) * (1.0 + sAmt * 0.5);
+  float dm = length(relS);
   float lr = uLoupeR * uLoupeOn;
   float swell = 1.0 + 0.75 * uLoupeOn * exp(-pow((dm - lr) / max(lr * 0.42, 1.0), 2.0));
   float rMax = cs * 0.64 * breathe * swell * intro;
@@ -81,26 +89,43 @@ void main() {
   col = mix(col, mix(uDot, colB, uMix), mB);
   col = mix(col, uInk, uScroll * 0.7);
 
-  if (uLoupeOn > 0.002) {
-    vec2 lp = uMouse + (p - uMouse) / uZoom;
-    vec2 ab = (p - uMouse) / max(lr, 1.0) * 1.6;
-    vec3 la = vec3(
-      texture2D(uA, coverUV(lp + ab, uSizeA)).r,
-      texture2D(uA, coverUV(lp, uSizeA)).g,
-      texture2D(uA, coverUV(lp - ab, uSizeA)).b);
-    vec3 lb = vec3(
-      texture2D(uB, coverUV(lp + ab, uSizeB)).r,
-      texture2D(uB, coverUV(lp, uSizeB)).g,
-      texture2D(uB, coverUV(lp - ab, uSizeB)).b);
+  // Liquid-glass loupe, after Apple's Liquid Glass magnifier: a clear magnified face, a rounded rim
+  // that refracts the image outward, hairline specular highlights on opposite edges and a soft
+  // contact shadow. Only pixels near the lens pay for the extra samples.
+  if (uLoupeOn > 0.002 && dm < lr * 1.4) {
+    float R = max(lr, 1.0);
+    float r = dm / R;                                      // 0 at the centre, 1 at the edge
+    vec2 dir = rel / max(length(rel), 0.001);
+    vec2 L = vec2(-0.5547, -0.8321);                       // key light from the top-left (screen y points down)
+    float facing = dot(dir, L);                            // +1 where the edge faces the light
+    float inside = 1.0 - smoothstep(R - 1.0, R + 0.5, dm);
+
+    // Soft contact shadow on the print
+    float sd = length(relS + L * R * 0.06) / R;
+    col *= 1.0 - (1.0 - inside) * exp(-pow(max(sd - 0.98, 0.0) / 0.2, 2.0)) * 0.3 * uLoupeOn;
+
+    // Refraction: the face is flat (plain magnification); the rounded rim, the outer fifth of
+    // the radius, bends light outward like the edge of a thick lens, so the image compresses
+    // there and pulls in from beyond the glass. Channels bend slightly differently (dispersion).
+    float t = clamp((r - 0.78) / 0.22, 0.0, 1.0);
+    float edge = 1.0 - sqrt(1.0 - t * t);                  // circular bevel: steepens toward the edge
+    float bend = edge * 0.55 * R;
+    vec2 base = uMouse + rel / uZoom;
+    vec2 oR = base + dir * bend * 1.08, oG = base + dir * bend, oB = base + dir * bend * 0.92;
+    vec3 la = vec3(texture2D(uA, coverUV(oR, uSizeA)).r, texture2D(uA, coverUV(oG, uSizeA)).g, texture2D(uA, coverUV(oB, uSizeA)).b);
+    vec3 lb = vec3(texture2D(uB, coverUV(oR, uSizeB)).r, texture2D(uB, coverUV(oG, uSizeB)).g, texture2D(uB, coverUV(oB, uSizeB)).b);
     vec3 lc = mix(la, lb, smoothstep(0.3, 0.7, uProg));
-    float inside = 1.0 - smoothstep(lr - 1.2, lr + 0.6, dm);
+
+    // Glass lifts and slightly enriches what's behind it
+    lc = mix(vec3(luma(lc)), lc, 1.12) * 0.97 + 0.035;
+    // Hairline specular rim: faint all round, bright where it faces the light,
+    // with a softer return highlight on the opposite edge (light bouncing inside the glass)
+    float ring = smoothstep(0.9, 0.985, r) * (1.0 - smoothstep(0.985, 1.0, r));
+    lc += ring * (0.12 + 0.88 * pow(max(facing, 0.0), 4.0) + 0.45 * pow(max(-facing, 0.0), 6.0)) * 0.9;
+    // and a soft glow along the lit side of the bevel
+    lc += edge * pow(max(facing, 0.0), 2.0) * 0.12;
+
     col = mix(col, lc, inside);
-    float edge = 1.0 - smoothstep(0.0, 1.4, abs(dm - lr));
-    col = mix(col, uLime, edge * uLoupeOn);
-    // crosshair
-    vec2 cp = abs(p - uMouse);
-    float cross = (step(cp.x, 0.75) * step(cp.y, 9.0) + step(cp.y, 0.75) * step(cp.x, 9.0)) * step(4.0, max(cp.x, cp.y));
-    col = mix(col, uLime, clamp(cross, 0.0, 1.0) * uLoupeOn);
   }
 
   gl_FragColor = vec4(col, 1.0);
@@ -152,7 +177,7 @@ export class Halftone {
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
     const loc = gl.getAttribLocation(pr, 'aPos'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
     this.u = {};
-    ['uRes', 'uCell', 'uAngle', 'uA', 'uB', 'uSizeA', 'uSizeB', 'uProg', 'uTime', 'uMouse', 'uLoupeR', 'uLoupeOn', 'uZoom', 'uScroll', 'uMix', 'uIntro', 'uDrift', 'uGamma', 'uGainA', 'uGainB', 'uInk', 'uDot', 'uLime']
+    ['uRes', 'uCell', 'uAngle', 'uA', 'uB', 'uSizeA', 'uSizeB', 'uProg', 'uTime', 'uMouse', 'uLoupeR', 'uLoupeOn', 'uZoom', 'uScroll', 'uMix', 'uIntro', 'uDrift', 'uGamma', 'uGainA', 'uGainB', 'uInk', 'uDot', 'uLime', 'uVel']
       .forEach(n => { this.u[n] = gl.getUniformLocation(pr, n); });
     gl.uniform1i(this.u.uA, 0); gl.uniform1i(this.u.uB, 1);
     gl.uniform3fv(this.u.uInk, hex(this.o.ink)); gl.uniform3fv(this.u.uDot, hex(this.o.dot)); gl.uniform3fv(this.u.uLime, hex(this.o.lime));
@@ -290,7 +315,19 @@ export class Halftone {
       if (m.x < -999) { m.x = m.tx; m.y = m.ty; }
     }
     const k = this.reduced ? 1 : 0.18;
+    const px = m.x, py = m.y;
     m.x += (m.tx - m.x) * k; m.y += (m.ty - m.y) * k;
+    // Liquid stretch: an under-damped spring chases the lens velocity, so the glass
+    // elongates along a drag and wobbles back to round when the pointer stops.
+    const st = this.stretch || (this.stretch = { x: 0, y: 0, vx: 0, vy: 0 });
+    if (!this.reduced && px > -999) {
+      const R = Math.max(o.loupe * this.dpr, 1);
+      let tx = (m.x - px) / R * 1.8, ty = (m.y - py) / R * 1.8;
+      const len = Math.hypot(tx, ty); if (len > 0.2) { tx *= 0.2 / len; ty *= 0.2 / len; }
+      st.vx = (st.vx + (tx - st.x) * 0.16) * 0.74; st.vy = (st.vy + (ty - st.y) * 0.16) * 0.74;
+      st.x += st.vx; st.y += st.vy;
+      if (Math.abs(st.x) + Math.abs(st.y) + Math.abs(st.vx) + Math.abs(st.vy) > 0.0005) animating = true;
+    }
     m.on += (m.target - m.on) * (this.reduced ? 1 : 0.12);
     if (Math.abs(m.tx - m.x) > .3 || Math.abs(m.ty - m.y) > .3 || Math.abs(m.target - m.on) > .002) animating = true;
     if (!this.reduced) animating = true; // breathing
@@ -307,6 +344,7 @@ export class Halftone {
     gl.uniform2f(this.u.uMouse, m.x, m.y);
     gl.uniform1f(this.u.uLoupeR, o.loupe * this.dpr * (o.wander && m.target < 1 ? 0.8 : 1));
     gl.uniform1f(this.u.uLoupeOn, m.on);
+    gl.uniform2f(this.u.uVel, st.x, st.y);
     gl.uniform1f(this.u.uScroll, this.scroll);
     gl.uniform1f(this.u.uIntro, this.intro);
     gl.uniform1f(this.u.uDrift, this.reduced ? 0.02 : 0.02 + 0.02 * Math.sin(now / 9000));
