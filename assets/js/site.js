@@ -1,5 +1,5 @@
 // DSB / PROOF — site interactions.
-import { Halftone, PrintReveal, textCanvas } from './halftone.js?v=20261101r';
+import { Halftone, PrintReveal, textCanvas } from './halftone.js?v=20261102b';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];

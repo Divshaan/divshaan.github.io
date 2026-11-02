@@ -45,6 +45,11 @@ vec2 coverUV(vec2 p, vec2 img) {
   return (p - o) / d;
 }
 
+// The continuous-tone source at a canvas point, mid-dissolve between images
+vec3 source(vec2 p) {
+  return mix(texture2D(uA, coverUV(p, uSizeA)).rgb, texture2D(uB, coverUV(p, uSizeB)).rgb, smoothstep(0.3, 0.7, uProg));
+}
+
 void main() {
   vec2 p = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y);
   float cs = uCell * (1.0 + uScroll * 2.4);
@@ -89,41 +94,68 @@ void main() {
   col = mix(col, mix(uDot, colB, uMix), mB);
   col = mix(col, uInk, uScroll * 0.7);
 
-  // Liquid-glass loupe, after Apple's Liquid Glass magnifier: a clear magnified face, a rounded rim
-  // that refracts the image outward, hairline specular highlights on opposite edges and a soft
-  // contact shadow. Only pixels near the lens pay for the extra samples.
+  // Liquid Glass loupe, after Apple's: a clear slab whose rim is a convex squircle bevel. The flat
+  // face magnifies; the bevel bends light outward, so the rim gathers the print from just beyond
+  // the glass. Nothing on it is painted white: the rim mirrors and catches the colour of what
+  // surrounds it, so it burns lime over lime and all but vanishes over ink, save thin glints
+  // where the bevel turns to the light. Only pixels near the lens pay for the extra samples.
   if (uLoupeOn > 0.002 && dm < lr * 1.4) {
     float R = max(lr, 1.0);
-    float r = dm / R;                                      // 0 at the centre, 1 at the edge
     vec2 dir = rel / max(length(rel), 0.001);
-    vec2 L = vec2(-0.5547, -0.8321);                       // key light from the top-left (screen y points down)
-    float facing = dot(dir, L);                            // +1 where the edge faces the light
+    // Key light from the top-left (screen y points down). It swings a little as the lens
+    // travels, so the glints slide round the rim the way they do when you tilt a phone.
+    vec2 L = normalize(vec2(-0.5547, -0.8321) - (uMouse / uRes - 0.5) * 0.5);
+    float facing = dot(dir, L);                            // +1 where the rim faces the light
     float inside = 1.0 - smoothstep(R - 1.0, R + 0.5, dm);
+    float e = R - dm;                                      // px in from the rim
 
-    // Soft contact shadow on the print
-    float sd = length(relS + L * R * 0.06) / R;
-    col *= 1.0 - (1.0 - inside) * exp(-pow(max(sd - 0.98, 0.0) / 0.2, 2.0)) * 0.3 * uLoupeOn;
+    // Bevel: x is 0 at the rim and 1 where the face turns flat. h is a convex squircle, near
+    // vertical at the rim and easing into the face; N is the bevel's surface normal.
+    float x = clamp(e / (R * 0.36), 0.0, 1.0);
+    float u = 1.0 - x;
+    float k = max(1.0 - u * u * u * u, 1e-4);
+    float h = pow(k, 0.25);
+    vec3 N = normalize(vec3(dir * min(u * u * u * pow(k, -0.75), 24.0) * 0.8, 1.0));
+    float graze = max(1.0 - N.z, 0.0);                     // 0 on the face, ~1 on the steep rim
 
-    // Refraction: the face is flat (plain magnification); the rounded rim, the outer fifth of
-    // the radius, bends light outward like the edge of a thick lens, so the image compresses
-    // there and pulls in from beyond the glass. Channels bend slightly differently (dispersion).
-    float t = clamp((r - 0.78) / 0.22, 0.0, 1.0);
-    float edge = 1.0 - sqrt(1.0 - t * t);                  // circular bevel: steepens toward the edge
-    float bend = edge * 0.55 * R;
+    // What the rim sees: the print just past the glass on that side, softened across a short arc
+    vec2 eP = uMouse + dir * R * 1.3, eT = vec2(-dir.y, dir.x) * R * 0.22;
+    vec3 env = (source(eP) + source(eP + eT) + source(eP - eT)) / 3.0;
+
+    // On the print: a soft contact shadow falling away from the light, and inside it the faint
+    // crescent of light the glass focuses. Both multiply the print, so over ink they vanish.
+    float outside = (1.0 - inside) * uLoupeOn;
+    float sd = length(relS + L * R * 0.07) / R;
+    col *= 1.0 - outside * exp(-pow(max(sd - 0.97, 0.0) / 0.24, 2.0)) * 0.24;
+    col *= 1.0 + outside * exp(-pow((dm / R - 1.05) / 0.045, 2.0)) * pow(max(-facing, 0.0), 2.0) * 0.45;
+
+    // Refraction: the face magnifies; the bevel bends light outward, so the image compresses
+    // toward the rim and the rim itself shows the print just beyond the glass, continuous with
+    // what lies outside. Channels bend slightly differently (dispersion).
+    float bend = (1.0 - h) * (R * 1.06 - R / uZoom);
     vec2 base = uMouse + rel / uZoom;
-    vec2 oR = base + dir * bend * 1.08, oG = base + dir * bend, oB = base + dir * bend * 0.92;
+    vec2 oR = base + dir * bend * 1.07, oG = base + dir * bend, oB = base + dir * bend * 0.93;
     vec3 la = vec3(texture2D(uA, coverUV(oR, uSizeA)).r, texture2D(uA, coverUV(oG, uSizeA)).g, texture2D(uA, coverUV(oB, uSizeA)).b);
     vec3 lb = vec3(texture2D(uB, coverUV(oR, uSizeB)).r, texture2D(uB, coverUV(oG, uSizeB)).g, texture2D(uB, coverUV(oB, uSizeB)).b);
     vec3 lc = mix(la, lb, smoothstep(0.3, 0.7, uProg));
+    lc = mix(vec3(luma(lc)), lc, 1.1);                     // glass deepens colour a touch
+    // The bevel is lit on the side facing the light and falls into shade opposite, which gives
+    // the slab its volume over bright print (and does nothing over ink)
+    lc *= 1.0 + graze * facing * 0.28;
 
-    // Glass lifts and slightly enriches what's behind it
-    lc = mix(vec3(luma(lc)), lc, 1.12) * 0.97 + 0.035;
-    // Hairline specular rim: faint all round, bright where it faces the light,
-    // with a softer return highlight on the opposite edge (light bouncing inside the glass)
-    float ring = smoothstep(0.9, 0.985, r) * (1.0 - smoothstep(0.985, 1.0, r));
-    lc += ring * (0.12 + 0.88 * pow(max(facing, 0.0), 4.0) + 0.45 * pow(max(-facing, 0.0), 6.0)) * 0.9;
-    // and a soft glow along the lit side of the bevel
-    lc += edge * pow(max(facing, 0.0), 2.0) * 0.12;
+    // Fresnel: the steeper the bevel, the more it mirrors its surroundings
+    lc = mix(lc, env, pow(graze, 5.0) * 0.65);
+    // Light caught in the glass takes the content's colour: hot lime over lime, dim pewter over
+    // ink, whitening only at the very peak of the lit side
+    float lit = pow(max(facing, 0.0), 3.0), back = pow(max(-facing, 0.0), 4.0);
+    vec3 glint = mix(env, vec3(1.0), 0.45 + 0.4 * lit * lit) * (0.15 + 0.85 * luma(env));
+    // Hairline glints on the rim, strongest facing the light, with a softer return on the far
+    // side where light bounces back through the glass
+    float line = smoothstep(0.0, 1.2, e) * exp(-e / (1.6 + R * 0.012));
+    lc += glint * line * (0.08 + 1.2 * lit + 0.55 * back);
+    // and a broader sheen just inside, where the bevel's slope meets the light square on
+    vec3 H = normalize(vec3(L * 0.89, 1.447)), H2 = normalize(vec3(-L * 0.89, 1.447));
+    lc += glint * (0.55 * pow(max(dot(N, H), 0.0), 60.0) + 0.2 * pow(max(dot(N, H2), 0.0), 60.0));
 
     col = mix(col, lc, inside);
   }
