@@ -594,7 +594,7 @@ body:has(.hdr.is-hidden) .toolbar { top: 0; }
 .script figcaption { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; color: var(--faint); }
 .colophon { margin-top: clamp(48px, 6vw, 90px); border-top: 1px solid var(--rule); }
 .colo { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gutter); row-gap: 10px; padding: clamp(20px, 2.4vw, 32px) 0; border-bottom: 1px solid var(--rule); }
-.colo dt { grid-column: 1 / 4; color: var(--faint); padding-top: .55em; }
+.colo dt, .colo__k { grid-column: 1 / 4; color: var(--faint); padding-top: .55em; }
 .colo__lead { grid-column: 4 / 8; font: 400 clamp(1.6rem, 2.6vw, 2.5rem)/1.05 var(--f-serif); letter-spacing: -.01em; }
 .colo__note { grid-column: 8 / 13; color: var(--dim); font-size: .98rem; padding-top: .35em; max-width: 46ch; }
 /* Colophon re-set in Punjabi or Hindi: Noto for the scripts, no tracking (it breaks conjuncts), roomier leading for matras */
@@ -796,8 +796,8 @@ body:has(.hdr.is-hidden) .toolbar { top: 0; }
   .trow__date, .trow__role, .trow__desc { grid-column: 1 / -1; }
   .skills, .scripts { grid-template-columns: 1fr; }
   .script + .script { padding-left: 0; border-left: 0; border-top: 1px solid var(--rule); }
-  .colo dt, .colo__lead, .colo__note { grid-column: 1 / -1; }
-  .colo dt { padding-top: 0; }
+  .colo dt, .colo__k, .colo__lead, .colo__note { grid-column: 1 / -1; }
+  .colo dt, .colo__k { padding-top: 0; }
   .specs4 { grid-template-columns: 1fr 1fr; }
   .specs4 > div:nth-child(3) { padding-left: 0; border-left: 0; }
   .specs4 > div:nth-child(n+3) { border-top: 1px solid var(--rule); }

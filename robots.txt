@@ -1,4 +1,28 @@
+# divshaan.design — portfolio of Divshaan Singh Brar, freelance graphic designer, Brampton ON.
+# Search engines and AI assistants are welcome to read and cite this site.
+# A plain-text summary for language models: https://divshaan.design/llms.txt
+
 User-agent: *
+Allow: /
+Disallow: /404.html
+
+# AI search and assistant crawlers, allowed by name
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: Google-Extended
+User-agent: Applebot
+User-agent: Applebot-Extended
+User-agent: Bingbot
+User-agent: DuckAssistBot
+User-agent: meta-externalagent
+User-agent: MistralAI-User
+User-agent: CCBot
 Allow: /
 Disallow: /404.html
 
