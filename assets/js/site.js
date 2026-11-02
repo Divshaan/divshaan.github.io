@@ -1,5 +1,5 @@
 // DSB / PROOF — site interactions.
-import { Halftone, PrintReveal, textCanvas } from './halftone.js?v=20261101b';
+import { Halftone, PrintReveal, textCanvas } from './halftone.js?v=20261101r';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -33,6 +33,7 @@ function header() {
     for (const s of themed) { const r = s.getBoundingClientRect(); if (r.top <= probe && r.bottom > probe) theme = s.dataset.theme; }
     if (hdr.dataset.hdrTheme !== theme) hdr.dataset.hdrTheme = theme;
     const y = scrollY;
+    hdr.classList.toggle('is-scrolled', y > 24);
     if (!document.body.classList.contains('menu-open')) hdr.classList.toggle('is-hidden', y > 320 && y > lastY + 2);
     if (y < lastY - 2 || y < 320) hdr.classList.remove('is-hidden');
     lastY = y;
@@ -201,6 +202,40 @@ function heroArt() {
   let ticking = false;
   addEventListener('scroll', () => { if (ticking) return; ticking = true; requestAnimationFrame(() => { ticking = false; const r = hero.getBoundingClientRect(); art.setScroll(-r.top / r.height); }); }, { passive: true });
   return art;
+}
+
+/* Colophon: hover (or tap) a script and the whole section re-sets in it ---- */
+function colophon() {
+  const sec = $('[data-colophon]'), data = $('#colophon-i18n'); if (!sec || !data) return;
+  const dict = JSON.parse(data.textContent), els = $$('[data-i18n]', sec), btns = $$('[data-lang]', sec);
+  dict.en = {}; els.forEach(el => { dict.en[el.dataset.i18n] = el.innerHTML; });
+  // Full Gurmukhi/Devanagari faces load only once someone comes near the switch
+  let fontsIn = false;
+  const loadFonts = () => {
+    if (fontsIn) return; fontsIn = true;
+    const l = document.createElement('link'); l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;800&family=Noto+Sans+Gurmukhi:wght@400;500;800&family=Noto+Serif+Devanagari&family=Noto+Serif+Gurmukhi&display=swap';
+    document.head.appendChild(l);
+  };
+  let cur = 'en';
+  const set = lang => {
+    if (lang === cur || !dict[lang]) return; cur = lang; sec.dataset.lang = lang;
+    btns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang && lang !== 'en')));
+    els.forEach((el, i) => {
+      const html = dict[lang][el.dataset.i18n]; if (html == null) return;
+      el.innerHTML = html;
+      if (lang === 'en') el.removeAttribute('lang'); else el.lang = lang;
+      if (!reduced) { el.classList.remove('is-reink'); void el.offsetWidth; el.style.setProperty('--ri', i); el.classList.add('is-reink'); }
+    });
+  };
+  sec.addEventListener('pointerenter', loadFonts, { once: true });
+  sec.addEventListener('focusin', loadFonts, { once: true });
+  btns.forEach(b => {
+    b.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') set(b.dataset.lang); });
+    b.addEventListener('click', () => { loadFonts(); set(b.dataset.lang); });
+  });
+  // Mouse: the language holds while you read, and resets when you leave the section
+  sec.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') set('en'); });
 }
 
 /* Portrait halftones (manifesto / about) --------------------------------- */
@@ -440,7 +475,7 @@ function misprint() {
 /* Boot ------------------------------------------------------------------- */
 function boot() {
   const develop = new PrintReveal({ onFail: el => el.classList.add('is-in') });
-  clock(); header(); menu(); manifesto(); reveals(develop.ok ? develop : null); cursorLabel(); loupe(); preview();
+  clock(); header(); menu(); manifesto(); reveals(develop.ok ? develop : null); colophon(); cursorLabel(); loupe(); preview();
   workIndex(); lightbox(); copyEmail(); contactForm(); liveEmbeds(); models(); viewTransitions(); misprint(); portraits();
   const begin = kineticName();
   const art = heroArt();
