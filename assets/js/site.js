@@ -205,6 +205,8 @@ function heroArt() {
 
 /* Portrait halftones (manifesto / about) --------------------------------- */
 function portraits() {
+  // The halftone portrait is an inspect-with-the-loupe piece; touch screens get the photograph.
+  if (!fine) return;
   $$('[data-halftone]').forEach(frame => {
     const img = $('img', frame), canvas = document.createElement('canvas');
     canvas.setAttribute('aria-hidden', 'true'); frame.appendChild(canvas);

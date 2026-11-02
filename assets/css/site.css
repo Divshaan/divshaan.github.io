@@ -802,3 +802,7 @@ body.menu-open .hdr .avail, body.menu-open .hdr__logo .dot { background: var(--i
   .px .ht-canvas { animation: px linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; scale: 1.1; }
 }
 @media (prefers-reduced-motion: reduce) { .ht-canvas { display: none; } }
+
+/* Input-specific copy */
+.touch-only { display: none; }
+@media (hover: none) { .hover-only { display: none; } .touch-only { display: inline; } }
