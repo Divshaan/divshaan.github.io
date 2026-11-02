@@ -119,6 +119,18 @@
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
   </url>
+  <url>
+    <loc>https://divshaan.design/work/modern-house.html</loc>
+    <lastmod>2026-11-01</lastmod>
+    <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://divshaan.design/work/echo-city.html</loc>
+    <lastmod>2026-11-01</lastmod>
+    <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
+  </url>
 
   <url>
     <loc>https://divshaan.design/work/fstv.html</loc>
