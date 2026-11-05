@@ -231,6 +231,10 @@ p + p { margin-top: 1em; }
 .hdr__logo .dot, .logo-dot { display: inline-block; width: .3em; height: .3em; border-radius: 50%; background: var(--lime); transition: transform .4s var(--ease-out); }
 .hdr[data-hdr-theme='lime'] .hdr__logo .dot { background: var(--ink); }
 .hdr__logo:hover .dot { transform: scale(1.5); }
+/* Hit areas of 24px+ (WCAG 2.5.8) without moving anything: pad out, take the same margin back. */
+.hdr__logo { padding-block: 6px; margin-block: -6px; }
+.menu__foot a, .ftr__base a, .intro__crumb a { padding-block: 5px; margin-block: -5px; }
+.ftr__base .ulink::after { bottom: 3px; } /* keeps the underline 2px under the text, as before */
 .hdr__role { grid-column: 4 / 7; }
 .hdr__time { grid-column: 7 / 10; display: flex; align-items: center; gap: 10px; }
 .hdr__time .avail { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 0 rgb(168 255 0 / .6); animation: pulse 2.4s var(--ease) infinite; }
@@ -309,14 +313,21 @@ body.menu-open .hdr .avail, body.menu-open .hdr__logo .dot { background: var(--i
 .hero__intro { grid-column: 1 / 6; }
 .hero__intro .reg { margin-bottom: 16px; color: var(--lime); }
 
-.hero__bottom { padding-bottom: clamp(18px, 3vh, 34px); }
+.hero__bottom { padding-bottom: clamp(18px, 3vh, 34px); container-type: inline-size; }
 .hero__name { position: relative; margin-left: -.03em; max-width: 100%; }
+/* Start at the size site.js fit() lands on (widest line = 72% of the measure, 90% under 861px;
+   4.313 = that line's width per px of font size), so fitting it after load moves nothing (no CLS). */
+.hero__name.d-mega { font-size: min(100cqw * .72 / 4.313, 25vh); }
+@media (max-width: 860px) { .hero__name.d-mega { font-size: min(100cqw * .9 / 4.313, 25vh); } }
 .hero__name .line { display: block; white-space: nowrap; }
 .hero__name .line--2 { display: flex; justify-content: flex-end; }
 .hero__name .line { clip-path: inset(-30% -100vw 0 -100vw); }
 .js .hero__name .ch { translate: 0 105%; transition: translate 1.1s var(--ease-out); transition-delay: calc(var(--i) * 45ms); }
 .js .hero__name.is-in .ch { translate: none; }
 .hero__name .ch { display: inline-block; font-variation-settings: 'wdth' var(--w, 62), 'wght' var(--g, 900); will-change: font-variation-settings; }
+/* Letters are placed by site.js with translateX, so their animated widths never reflow the line (no CLS). */
+.js .hero__name .line { position: relative; height: .8em; }
+.hero__name .ch { position: absolute; left: 0; top: 0; }
 .hero__meta { margin-top: clamp(16px, 2.6vh, 28px); padding-top: 14px; border-top: 1px solid var(--rule); align-items: end; row-gap: 14px; }
 .hero__lede { grid-column: 1 / 6; max-width: 40ch; color: var(--dim); font-size: 1.02rem; line-height: 1.45; }
 .hero__lede strong { color: var(--paper); font-weight: 500; }
@@ -415,6 +426,14 @@ body.menu-open .hdr .avail, body.menu-open .hdr__logo .dot { background: var(--i
 .marquee { overflow: hidden; border-block: 1px solid var(--rule); padding-block: clamp(18px, 2.4vw, 34px); }
 .marquee__track { display: flex; width: max-content; animation: marquee 48s linear infinite; }
 .marquee:hover .marquee__track { animation-play-state: paused; }
+/* Pause control (WCAG 2.2.2): pressed = paused; the track also rests while the control has keyboard focus */
+.marquee.is-paused .marquee__track, .marquee__head:has(.marquee__toggle:focus-visible) + .marquee .marquee__track { animation-play-state: paused; }
+.marquee__head { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+.marquee__head .slug { flex: 1; min-width: 0; }
+.marquee__toggle { display: inline-flex; align-items: center; gap: 8px; min-height: 28px; padding: 6px 10px; border: 1px solid var(--rule-strong); color: var(--dim); white-space: nowrap; transition: color .2s, border-color .2s, background-color .2s; }
+.marquee__toggle:hover { color: var(--fg); border-color: var(--fg); }
+.marquee__toggle[aria-pressed='true'] { background: var(--lime); border-color: var(--lime); color: var(--ink); }
+.marquee__bars { width: 7px; height: 8px; border-inline: 2px solid currentColor; flex: none; }
 .marquee__item { display: inline-flex; align-items: center; gap: clamp(24px, 3vw, 48px); padding-right: clamp(24px, 3vw, 48px); font: 900 clamp(2.2rem, 5vw, 5rem)/1 var(--f-display); font-stretch: 62%; text-transform: uppercase; letter-spacing: -.01em; white-space: nowrap; }
 .marquee__item .o { color: transparent; -webkit-text-stroke: 1px var(--fg); }
 .marquee__item .sep { width: .32em; height: .32em; border-radius: 50%; background: var(--lime); flex: none; }
@@ -833,6 +852,7 @@ body:has(.hdr.is-hidden) .toolbar { top: 0; }
   .js .print-in { -webkit-mask: none; mask: none; }
   .marquee__track { animation: none; flex-wrap: wrap; width: auto; }
   .marquee__item[aria-hidden='true'] { display: none; }
+  .marquee__toggle { display: none; } /* the list is already still */
   .px img { animation: none; scale: 1; }
   .manifesto__text .w { color: var(--ink); }
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }

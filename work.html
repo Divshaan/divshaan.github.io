@@ -28,9 +28,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Instrument+Serif:ital@0;1&amp;display=swap">
-<link rel="stylesheet" href="/assets/css/site.css?v=20261102seo">
+<link rel="stylesheet" href="/assets/css/site.css?v=20261105a">
+<!-- Under 861px the grid is the default view and its first card is the LCP image; on desktop the list hides it, so preload for small screens only -->
+<link rel="preload" as="image" fetchpriority="high" media="(max-width: 860px)" href="/images/opt/adcamp1-07-1280.webp" imagesrcset="/images/opt/adcamp1-07-640.webp 640w, /images/opt/adcamp1-07-1280.webp 1280w, /images/opt/adcamp1-07-2000.webp 2000w" imagesizes="100vw">
 <script>document.documentElement.classList.add('js')</script>
-<script type="module" src="/assets/js/site.js?v=20261102b"></script>
+<script type="module" src="/assets/js/site.js?v=20261105a"></script>
 
 <script type="application/ld+json">
 {

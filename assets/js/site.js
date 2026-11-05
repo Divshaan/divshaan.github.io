@@ -117,27 +117,56 @@ function kineticName() {
   const name = $('[data-kinetic]'); if (!name) return null;
   const lines = $$('.line', name);
   const chars = [];
-  lines.forEach(line => {
+  const rows = lines.map(line => {
     const text = line.textContent; line.textContent = '';
+    const row = { line, end: line.classList.contains('line--2'), chars: [], width: 0 };
     [...text].forEach(c => {
       const s = document.createElement('span'); s.className = 'ch'; s.textContent = c === ' ' ? ' ' : c;
       s.style.setProperty('--i', chars.length); line.appendChild(s);
-      chars.push({ el: s, w: 125, g: 900, tw: 62, tg: 900, cx: 0, cy: 0 });
+      const ch = { el: s, w: 125, g: 900, tw: 62, tg: 900, cx: 0, cy: 0 };
+      chars.push(ch); row.chars.push(ch);
     });
+    return row;
   });
+
+  // Letters sit in absolutely positioned boxes and are set side by side with transforms, so the
+  // width axis can animate (intro, pointer, ambient wave) without reflowing the line: no layout
+  // shift. Line 2 hangs from the right edge, as its old flex-end layout did.
+  const place = () => rows.forEach(r => {
+    const ws = r.chars.map(c => c.el.getBoundingClientRect().width);
+    r.width = ws.reduce((a, b) => a + b, 0);
+    let x = r.end ? r.line.clientWidth - r.width : 0;
+    r.chars.forEach((c, i) => { c.el.style.transform = `translateX(${x.toFixed(2)}px)`; x += ws[i]; });
+  });
+  place();
 
   // Size the name so its widest line spans most of the measure at rest,
   // leaving room for letters to stretch under the pointer.
-  const textWidth = el => { const r = document.createRange(); r.selectNodeContents(el); return r.getBoundingClientRect().width; };
+  // The CSS already starts at this size (site.css, .hero__name.d-mega), so keep the CSS value
+  // unless the measurement disagrees by more than half a pixel: no resize, no layout shift.
+  let faceIn = false;
   const fit = () => {
+    // Measuring the fallback face would size the name wrong and jump when Archivo lands;
+    // keep the CSS size until Archivo itself has loaded (faceIn, below, fits again then).
+    if (!faceIn) { place(); return; }
+    // Under reduced motion site.css gives every element a .01ms transition on `all`, so a font-size
+    // set here would still read the old size; switch transitions off while measuring.
+    const still = on => [name, ...lines].forEach(el => { el.style.transitionProperty = on ? 'none' : ''; });
+    still(true);
     const wrap = name.getBoundingClientRect().width;
     const target = innerWidth < 861 ? 0.9 : 0.72;
+    name.style.fontSize = '';
+    const css = parseFloat(getComputedStyle(name).fontSize);
     name.style.fontSize = '100px';
     chars.forEach(c => { c.el.style.setProperty('--w', 62); c.el.style.setProperty('--g', 900); });
-    const w = Math.max(...lines.map(textWidth)) || 1;
-    name.style.fontSize = Math.min(wrap * target / w * 100, innerHeight * 0.25) + 'px';
-    measure();
+    place();
+    const w = Math.max(...rows.map(r => r.width)) || 1;
+    const size = Math.min(wrap * target / w * 100, innerHeight * 0.25);
+    name.style.fontSize = Math.abs(size - css) < 0.5 ? '' : size + 'px';
+    place(); measure();
     chars.forEach(c => { c.el.style.setProperty('--w', c.w.toFixed(1)); c.el.style.setProperty('--g', c.g.toFixed(0)); });
+    place();
+    still(false);
   };
   const measure = () => chars.forEach(c => { const r = c.el.getBoundingClientRect(); c.cx = r.left + r.width / 2 + scrollX; c.cy = r.top + r.height / 2 + scrollY; });
 
@@ -157,6 +186,7 @@ function kineticName() {
       if (Math.abs(c.w - c.tw) > .05 || Math.abs(c.g - c.tg) > .5) moving = true;
       c.el.style.setProperty('--w', c.w.toFixed(2)); c.el.style.setProperty('--g', c.g.toFixed(1));
     });
+    place();
     if (moving || ambient || intro < 1) raf = requestAnimationFrame(loop);
   };
   const kick = () => { if (!raf && started) raf = requestAnimationFrame(loop); };
@@ -169,10 +199,12 @@ function kineticName() {
 
   const begin = () => {
     fit();
-    if (reduced) { chars.forEach(c => { c.w = 62; c.g = 900; c.el.style.setProperty('--w', 62); c.el.style.setProperty('--g', 900); }); name.classList.add('is-in'); return; }
+    if (reduced) { chars.forEach(c => { c.w = 62; c.g = 900; c.el.style.setProperty('--w', 62); c.el.style.setProperty('--g', 900); }); place(); name.classList.add('is-in'); return; }
     name.classList.add('is-in'); started = true; t0 = performance.now(); kick();
   };
-  (document.fonts?.ready || Promise.resolve()).then(() => { fit(); });
+  // fonts.status reads 'loaded' before Archivo has even been requested (nothing pending yet),
+  // so wait for the face itself; load() also starts the fetch. A failed load fits on the fallback.
+  (document.fonts?.load('900 100px Archivo') || Promise.resolve()).catch(() => {}).then(() => { faceIn = true; fit(); });
   return begin;
 }
 
@@ -395,6 +427,17 @@ function lightbox() {
 }
 
 /* Copy email ------------------------------------------------------------- */
+/* Marquee pause (WCAG 2.2.2) ----------------------------------------------- */
+function marquee() {
+  $$('.marquee__toggle').forEach(btn => {
+    const m = document.getElementById(btn.getAttribute('aria-controls')); if (!m) return;
+    btn.addEventListener('click', () => {
+      const paused = btn.getAttribute('aria-pressed') !== 'true';
+      btn.setAttribute('aria-pressed', String(paused)); m.classList.toggle('is-paused', paused);
+    });
+  });
+}
+
 function copyEmail() {
   $$('[data-copy]').forEach(b => b.addEventListener('click', async e => {
     e.preventDefault(); const st = $('.state', b);
@@ -476,7 +519,7 @@ function misprint() {
 function boot() {
   const develop = new PrintReveal({ onFail: el => el.classList.add('is-in') });
   clock(); header(); menu(); manifesto(); reveals(develop.ok ? develop : null); colophon(); cursorLabel(); loupe(); preview();
-  workIndex(); lightbox(); copyEmail(); contactForm(); liveEmbeds(); models(); viewTransitions(); misprint(); portraits();
+  workIndex(); lightbox(); marquee(); copyEmail(); contactForm(); liveEmbeds(); models(); viewTransitions(); misprint(); portraits();
   const begin = kineticName();
   const art = heroArt();
   const ready = art ? art.start() : Promise.resolve();
