@@ -1,5 +1,5 @@
 // DSB / PROOF — site interactions.
-import { Halftone, PrintReveal, textCanvas } from './halftone.js?v=20261102b';
+import { Halftone, PrintReveal, textCanvas } from './halftone.js?v=20261106a';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -7,6 +7,7 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const lerp = (a, b, t) => a + (b - a) * t;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
+const motion = { held: false }; // the hero's Hold control; 'dsb:hold' fires when it changes
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
   set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* private mode */ } },
@@ -46,8 +47,11 @@ function header() {
 function menu() {
   const btn = $('[data-menu-btn]'), m = $('#menu'); if (!btn || !m) return;
   const label = $('[data-menu-label]', btn);
+  // While the menu is open the page behind it is inert, so Tab stays on the header and the menu.
+  const behind = $$('main, .ftr, .skip');
   const set = open => {
     btn.setAttribute('aria-expanded', open); m.classList.toggle('is-open', open); m.inert = !open;
+    behind.forEach(el => { el.inert = open; });
     document.body.classList.toggle('menu-open', open); if (label) label.textContent = open ? 'Close' : 'Menu';
     if (open) setTimeout(() => $('a', m)?.focus(), 300); else btn.focus({ preventScroll: true });
   };
@@ -179,7 +183,7 @@ function kineticName() {
     chars.forEach((c, i) => {
       let f = 0;
       if (active && !ambient) { const d = Math.hypot(c.cx - scrollX - mx, c.cy - scrollY - my); f = Math.exp(-((d / R) ** 2)); }
-      else if (!reduced) { const ph = (now / 1000) * 1.1 - i * 0.42; f = Math.pow(Math.max(0, Math.sin(ph)), 14) * 0.85; }
+      else if (!reduced && !motion.held) { const ph = (now / 1000) * 1.1 - i * 0.42; f = Math.pow(Math.max(0, Math.sin(ph)), 14) * 0.85; }
       const local = clamp(intro * 1.6 - i * 0.04, 0, 1);
       c.tw = lerp(125, 62 + 63 * f, local); c.tg = lerp(500, 900 - 620 * f, local);
       c.w = lerp(c.w, c.tw, 0.14); c.g = lerp(c.g, c.tg, 0.14);
@@ -187,11 +191,14 @@ function kineticName() {
       c.el.style.setProperty('--w', c.w.toFixed(2)); c.el.style.setProperty('--g', c.g.toFixed(1));
     });
     place();
-    if (moving || ambient || intro < 1) raf = requestAnimationFrame(loop);
+    if (moving || (ambient && !motion.held) || intro < 1) raf = requestAnimationFrame(loop);
   };
   const kick = () => { if (!raf && started) raf = requestAnimationFrame(loop); };
+  document.addEventListener('dsb:hold', kick); // settle to rest when held, wave again on release
 
-  if (fine) addEventListener('pointermove', e => { mx = e.clientX; my = e.clientY; active = true; lastMove = performance.now(); kick(); }, { passive: true });
+  // When the pointer goes still, wake the loop once the idle window has passed so the wave returns.
+  let idleT = 0;
+  if (fine) addEventListener('pointermove', e => { mx = e.clientX; my = e.clientY; active = true; lastMove = performance.now(); kick(); clearTimeout(idleT); idleT = setTimeout(kick, 5050); }, { passive: true });
   addEventListener('resize', () => { fit(); kick(); });
   addEventListener('scroll', () => { if (scrollY < innerHeight * 1.2) kick(); }, { passive: true });
   const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) kick(); else if (raf) { cancelAnimationFrame(raf); raf = 0; } });
@@ -214,23 +221,52 @@ function heroArt() {
   const canvas = $('canvas', hero);
   const slides = JSON.parse($('#hero-slides').textContent);
   const card = $('[data-now]'), title = $('[data-now-title]'), sub = $('[data-now-sub]'), idx = $('[data-now-idx]'), bar = $('[data-now-bar]');
+  const onChange = i => {
+    const s = slides[i];
+    if (title) { title.textContent = s.title; sub.textContent = s.sub; idx.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0'); card.href = s.href; card.setAttribute('aria-label', 'Now showing: ' + s.title + ' — open project'); }
+  };
   const art = new Halftone(canvas, {
     images: slides, cycle: 5200, transition: 1600, loupe: 118, zoom: 1.75, wander: !fine, cell: [6, 9.5], dot: '#c9c7bf', gamma: 1.05,
-    onChange(i) {
-      const s = slides[i];
-      if (title) { title.textContent = s.title; sub.textContent = s.sub; idx.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0'); card.href = s.href; card.setAttribute('aria-label', 'Now showing: ' + s.title + ' — open project'); }
-    },
+    onChange,
     onTick(p) { if (bar) bar.style.transform = `scaleX(${p})`; },
     onReady() { hero.classList.add('gl-ready'); },
   });
-  if (!art.ok) return null;
+
+  // Hold: one control stops everything that moves on its own here (WCAG 2.2.2) and is remembered
+  // for the session. Pointer-driven effects still answer the pointer.
+  const holdBtn = $('[data-now-hold]', hero);
+  const setHold = on => {
+    motion.held = on; holdBtn?.setAttribute('aria-pressed', String(on));
+    if (art.ok) art.hold(on);
+    store.sset('dsb-hold', on ? '1' : '');
+    document.dispatchEvent(new Event('dsb:hold'));
+  };
+  holdBtn?.addEventListener('click', () => setHold(holdBtn.getAttribute('aria-pressed') !== 'true'));
+  if (!reduced && store.sget('dsb-hold')) setHold(true);
+
+  const prevBtn = $('[data-now-prev]'), nextBtn = $('[data-now-next]');
+  if (!art.ok) {
+    // No WebGL: the dot-masked fallback print stays, and the arrows page through the slides on it.
+    hero.classList.add('no-gl');
+    const fb = $('.hero__fallback', hero); let cur = 0;
+    const go = n => {
+      cur = (n + slides.length) % slides.length;
+      if (fb) { fb.removeAttribute('srcset'); fb.removeAttribute('sizes'); fb.src = slides[cur].src; }
+      onChange(cur);
+    };
+    prevBtn?.addEventListener('click', () => go(cur - 1));
+    nextBtn?.addEventListener('click', () => go(cur + 1));
+    return null;
+  }
   canvas.addEventListener('halftone:lost', () => hero.classList.remove('gl-ready'));
-  $('[data-now-prev]')?.addEventListener('click', () => art.prev());
-  $('[data-now-next]')?.addEventListener('click', () => art.next());
-  card?.addEventListener('pointerenter', () => art.pause(true));
-  card?.addEventListener('pointerleave', () => art.pause(false));
-  card?.addEventListener('focus', () => art.pause(true));
-  card?.addEventListener('blur', () => art.pause(false));
+  prevBtn?.addEventListener('click', () => art.prev());
+  nextBtn?.addEventListener('click', () => art.next());
+  // Hovering or focusing anything in the Now showing box (card or its controls) holds the slide.
+  const box = $('.hero__now', hero) || card;
+  box?.addEventListener('pointerenter', () => art.pause(true));
+  box?.addEventListener('pointerleave', () => art.pause(false));
+  box?.addEventListener('focusin', e => { if (e.target.matches(':focus-visible')) art.pause(true); }); // keyboard only: a tap leaves focus behind
+  box?.addEventListener('focusout', e => { if (!box.contains(e.relatedTarget)) art.pause(false); });
   let ticking = false;
   addEventListener('scroll', () => { if (ticking) return; ticking = true; requestAnimationFrame(() => { ticking = false; const r = hero.getBoundingClientRect(); art.setScroll(-r.top / r.height); }); }, { passive: true });
   return art;
@@ -287,10 +323,15 @@ function portraits() {
 
 /* Loader ----------------------------------------------------------------- */
 function loader(ready) {
-  const el = $('[data-loader]');
-  if (!el || reduced || store.sget('dsb-proofed')) { el?.remove(); return Promise.resolve(); }
-  store.sset('dsb-proofed', '1');
-  el.classList.add('is-on'); document.documentElement.style.overflow = 'hidden';
+  // The inline head script decides: .proofing only on the first page view of a session, when that
+  // page is home and motion is allowed. Any page marks the session as proofed, so arriving on a
+  // case study and then going home doesn't run the loader after the page transition.
+  const el = $('[data-loader]'), root = document.documentElement;
+  // If this script arrived so late that the CSS failsafe already lifted the cover, don't drop it
+  // back over a page the visitor is reading.
+  const lifted = el && getComputedStyle(el).visibility === 'hidden';
+  if (!el || reduced || lifted || !root.classList.contains('proofing')) { el?.remove(); root.classList.remove('proofing'); return Promise.resolve(); }
+  el.classList.add('is-on'); root.style.overflow = 'hidden';
   const count = $('[data-loader-count]', el), bar = $('[data-loader-bar]', el);
   const t0 = performance.now(), min = 1250, max = 3200;
   let isReady = false; ready.then(() => { isReady = true; });
@@ -303,7 +344,7 @@ function loader(ready) {
       if ((p >= 1 && isReady) || t > max) {
         count.textContent = '100'; bar.style.setProperty('--p', 1);
         setTimeout(() => {
-          el.classList.add('is-out'); document.documentElement.style.overflow = '';
+          el.classList.add('is-out'); root.style.overflow = ''; root.classList.remove('proofing');
           setTimeout(() => el.remove(), 950); res();
         }, 180);
       } else requestAnimationFrame(step);
@@ -374,9 +415,14 @@ function preview() {
     imgs.forEach((i, k) => i.classList.toggle('is-cur', k === src));
     on = true; box.classList.add('is-on'); if (!raf) raf = requestAnimationFrame(loop);
   };
+  // Once the page is being left, hold the preview as it is: it is what the case hero grows out of,
+  // and Chrome fires pointerleave just before the old page is captured.
+  let leaving = false;
+  addEventListener('pageswap', () => { leaving = true; });
+  addEventListener('pageshow', () => { leaving = false; });
   rows.forEach(r => {
     r.addEventListener('pointerenter', e => { x = e.clientX; y = e.clientY; if (!on) { cx = x; cy = y; } show(r.dataset.preview); });
-    r.addEventListener('pointerleave', () => { on = false; box.classList.remove('is-on'); });
+    r.addEventListener('pointerleave', () => { if (leaving) return; on = false; box.classList.remove('is-on'); });
   });
   addEventListener('pointermove', e => { x = e.clientX; y = e.clientY; if (on && !raf) raf = requestAnimationFrame(loop); }, { passive: true });
 }
@@ -408,22 +454,33 @@ function lightbox() {
   const dlg = $('.lightbox'); if (!dlg) return;
   const figs = $$('[data-lb]'); if (!figs.length) return;
   const img = $('img', dlg), cap = $('[data-lb-cap]', dlg), code = $('[data-lb-code]', dlg), count = $('[data-lb-count]', dlg);
-  let i = 0;
-  const show = n => {
-    i = (n + figs.length) % figs.length; const f = figs[i];
-    img.src = f.dataset.lb; img.alt = f.dataset.alt || '';
+  img.draggable = false; // a native image drag would cancel the swipe
+  let i = 0, token = 0;
+  const label = f => {
+    img.alt = f.dataset.alt || '';
     cap.textContent = f.dataset.caption || ''; code.textContent = f.dataset.code || '';
     count.textContent = `${String(i + 1).padStart(2, '0')} / ${String(figs.length).padStart(2, '0')}`;
   };
-  figs.forEach((f, n) => f.addEventListener('click', () => { show(n); dlg.showModal(); }));
+  // Opening sets image and caption together; stepping waits for the next image to decode, so the
+  // caption never names an image that isn't on screen yet.
+  const show = (n, now) => {
+    i = (n + figs.length) % figs.length; const f = figs[i], t = ++token;
+    if (now) { img.src = f.dataset.lb; label(f); return; }
+    const next = new Image(); next.src = f.dataset.lb;
+    const swap = () => { if (t !== token) return; img.src = f.dataset.lb; label(f); };
+    (next.decode ? next.decode() : Promise.resolve()).then(swap, swap);
+  };
+  figs.forEach((f, n) => f.addEventListener('click', () => { show(n, true); dlg.showModal(); }));
   $('[data-lb-prev]', dlg).addEventListener('click', () => show(i - 1));
   $('[data-lb-next]', dlg).addEventListener('click', () => show(i + 1));
   $('[data-lb-close]', dlg).addEventListener('click', () => dlg.close());
   dlg.addEventListener('keydown', e => { if (e.key === 'ArrowRight') show(i + 1); if (e.key === 'ArrowLeft') show(i - 1); });
-  dlg.addEventListener('click', e => { if (e.target === dlg || e.target.classList.contains('lightbox__stage')) dlg.close(); });
-  let sx = null;
-  dlg.addEventListener('pointerdown', e => { sx = e.clientX; });
-  dlg.addEventListener('pointerup', e => { if (sx === null) return; const dx = e.clientX - sx; if (Math.abs(dx) > 60) show(i + (dx < 0 ? 1 : -1)); sx = null; });
+  let sx = null, swiped = false;
+  // A drag that ends on the letterbox is a swipe, not a click to close.
+  dlg.addEventListener('click', e => { if (swiped) { swiped = false; return; } if (e.target === dlg || e.target.classList.contains('lightbox__stage')) dlg.close(); });
+  dlg.addEventListener('pointerdown', e => { sx = e.clientX; swiped = false; });
+  dlg.addEventListener('pointercancel', () => { sx = null; });
+  dlg.addEventListener('pointerup', e => { if (sx === null) return; const dx = e.clientX - sx; swiped = Math.abs(dx) > 60; if (swiped) show(i + (dx < 0 ? 1 : -1)); sx = null; });
 }
 
 /* Copy email ------------------------------------------------------------- */
@@ -450,18 +507,30 @@ function copyEmail() {
 /* Contact form ----------------------------------------------------------- */
 function contactForm() {
   const f = $('#contact-form'); if (!f) return;
-  const status = $('[data-form-status]', f), btn = $('button[type=submit]', f);
+  const status = $('[data-form-status]', f), btn = $('button[type=submit]', f), label = $('[data-btn-label]', btn);
+  const idle = label?.textContent;
   f.addEventListener('submit', async e => {
     e.preventDefault();
     if (!f.reportValidity()) return;
-    btn.disabled = true; status.className = 'form__status mono'; status.textContent = 'Sending to press…';
+    btn.disabled = true; f.setAttribute('aria-busy', 'true'); if (label) label.textContent = 'Sending…';
+    status.className = 'form__status mono'; status.textContent = 'Sending to press…';
     try {
       const r = await fetch(f.action, { method: 'POST', body: new FormData(f), headers: { Accept: 'application/json' } });
       if (!r.ok) throw new Error(r.status);
       f.reset(); status.classList.add('is-ok'); status.textContent = 'Received — I’ll reply within 48 hours.';
     } catch (err) {
-      status.classList.add('is-err'); status.textContent = 'That didn’t go through. Email me directly instead.';
-    } finally { btn.disabled = false; }
+      // Keep what they wrote, and hand it to their own mail app in one click.
+      const to = 'singhbrardivshaan@gmail.com', msg = f.elements.message?.value || '';
+      const a = document.createElement('a');
+      a.href = `mailto:${to}?subject=${encodeURIComponent('Project enquiry')}&body=${encodeURIComponent(msg)}`;
+      a.textContent = 'Email it to me directly';
+      status.classList.add('is-err'); status.replaceChildren('That didn’t go through. ', a, ' — your message is still in the form.');
+      a.focus({ preventScroll: true }); // the way forward is the link, and focus order follows it
+    } finally {
+      btn.disabled = false; f.removeAttribute('aria-busy'); if (label) label.textContent = idle;
+      // Disabling the focused button sent focus to <body>; put it back so keyboard users keep their place.
+      if (document.activeElement === document.body) btn.focus({ preventScroll: true });
+    }
   });
 }
 
@@ -497,12 +566,28 @@ function models() {
 
 /* Cross-document view transitions: morph clicked image into case hero ---- */
 function viewTransitions() {
+  // A name may sit on only one element when the old page is captured, or the browser drops the
+  // whole transition. The case hero names itself in site.css, so on a case page it is switched off
+  // before the Next-case image takes the name.
+  const clear = () => $$('img').forEach(i => { if (i.style.viewTransitionName) i.style.viewTransitionName = ''; });
   document.addEventListener('click', e => {
-    const a = e.target.closest('a[data-vt]'); if (!a || e.metaKey || e.ctrlKey || e.shiftKey) return;
-    $$('[style*="view-transition-name"]').forEach(el => { el.style.viewTransitionName = ''; });
-    const img = $('[data-vt-img] img', a) || $('img', a); if (img) img.style.viewTransitionName = 'case-hero';
+    const a = e.target.closest('a[data-vt]'); if (!a || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button) return;
+    clear();
+    // In the list view the row thumbnail is hidden: the floating preview is the image in view.
+    const img = (a.matches('[data-preview]') && $('.preview.is-on img.is-cur')) || $('[data-vt-img] img', a) || $('img', a);
+    $$('.case-hero__media img').forEach(h => { if (h !== img) h.style.viewTransitionName = 'none'; });
+    // A hidden or fully transparent image has nothing to morph from: the page just prints over.
+    const seen = img && img.getClientRects().length && +getComputedStyle(img.closest('.next__media') || img).opacity > 0.95;
+    if (seen) img.style.viewTransitionName = 'case-hero';
   });
-  addEventListener('pageshow', () => $$('img').forEach(i => { if (i.style.viewTransitionName) i.style.viewTransitionName = ''; }));
+  addEventListener('pageshow', clear);
+  // Going Back restores a case page scrolled far down; its hero (named in CSS) would fly in from
+  // thousands of pixels away. A hero out of view takes no part, on either side of the swap.
+  const offstage = () => $$('.case-hero__media img').forEach(h => {
+    const r = h.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight) h.style.viewTransitionName = 'none';
+  });
+  addEventListener('pageswap', e => { if (e.viewTransition) offstage(); });
+  addEventListener('pagereveal', e => { if (e.viewTransition) offstage(); });
 }
 
 /* 404 -------------------------------------------------------------------- */

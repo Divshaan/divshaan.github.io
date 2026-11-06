@@ -77,8 +77,10 @@ a { color: inherit; text-decoration: none; }
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
 ul, ol { list-style: none; }
 ::selection { background: var(--lime); color: var(--ink); }
-:focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; border-radius: 2px; }
-[data-theme='lime'] :focus-visible { outline-color: var(--ink); }
+/* The focus ring is the spot colour on ink and turns ink wherever the ground is paper or lime. */
+:focus-visible { outline: 2px solid var(--focus, var(--lime)); outline-offset: 3px; border-radius: 2px; }
+[data-theme='paper'], [data-theme='lime'], .menu, .form,
+.hdr[data-hdr-theme='paper'], .hdr[data-hdr-theme='lime'], body.menu-open .hdr { --focus: var(--ink); }
 
 .sr-only {
   position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
@@ -210,6 +212,8 @@ p + p { margin-top: 1em; }
 }
 .hdr[data-hdr-theme='paper'], .hdr[data-hdr-theme='lime'] { --hfg: var(--ink); }
 .hdr.is-hidden { transform: translateY(-100%); }
+/* Never hide a link that has keyboard focus, or the logo and Close button while the menu is open */
+.hdr.is-hidden:has(:focus-visible), body.menu-open .hdr.is-hidden { transform: none; }
 .hdr::before {
   content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background: linear-gradient(to bottom, rgb(11 11 10 / .55), rgb(11 11 10 / 0));
@@ -262,13 +266,19 @@ p + p { margin-top: 1em; }
 .menu__list a { display: flex; align-items: baseline; gap: 14px; padding: 6px 0; border-bottom: 1px solid rgb(11 11 10 / .2); font: 900 clamp(3.4rem, 17vw, 6rem)/.95 var(--f-display); font-stretch: 62%; text-transform: uppercase; }
 .menu__list a span { font: 400 .7rem/1 var(--f-mono); }
 .menu__foot { display: flex; justify-content: space-between; align-items: end; gap: 16px; }
+body.menu-open { overflow: hidden; } /* the page stays put under the open menu */
 body.menu-open .hdr { --hfg: var(--ink); }
 body.menu-open .hdr::before, body.menu-open .hdr::after { opacity: 0; }
 body.menu-open .hdr .avail, body.menu-open .hdr__logo .dot { background: var(--ink); }
 
 /* Loader ------------------------------------------------------------------ */
 .loader { position: fixed; inset: 0; z-index: 150; background: var(--ink); color: var(--paper); display: none; }
-.js .loader.is-on { display: grid; place-items: center; }
+/* The head script adds .proofing on a first visit to the home page, so the cover is there from the
+   first paint instead of dropping over a page that has already shown. */
+.js.proofing .loader, .js .loader.is-on { display: grid; place-items: center; }
+/* If site.js never takes the cover over, it lifts by itself. */
+.js.proofing .loader:not(.is-on) { animation: loader-lift 0s 6s forwards; }
+@keyframes loader-lift { to { visibility: hidden; } }
 .loader__inner { display: grid; justify-items: center; gap: 22px; }
 .loader__reg { width: 64px; height: 64px; color: var(--lime); animation: spin 2.4s linear infinite; }
 .loader__count { font: 900 clamp(5rem, 16vw, 12rem)/.8 var(--f-display); font-stretch: 62%; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
@@ -310,6 +320,13 @@ body.menu-open .hdr .avail, body.menu-open .hdr__logo .dot { background: var(--i
 .hero__now-ctrl button { width: 30px; height: 30px; border: 1px solid var(--rule-strong); border-radius: 50%; display: grid; place-items: center; transition: background-color .2s, color .2s, border-color .2s; }
 .hero__now-ctrl button:hover { background: var(--lime); color: var(--ink); border-color: var(--lime); }
 .hero__now-ctrl svg { width: 12px; height: 12px; }
+/* Hold press: stops the slides, the dot screen's breathing and the name's wave (WCAG 2.2.2) */
+.hero__hold .marquee__bars { width: 8px; height: 9px; }
+.hero__hold .hold__play { display: none; width: 0; height: 0; margin-left: 2px; border-block: 5px solid transparent; border-left: 8px solid currentColor; }
+.hero__hold[aria-pressed='true'] .marquee__bars { display: none; }
+.hero__hold[aria-pressed='true'] .hold__play { display: block; }
+.hero__now-ctrl .hero__hold[aria-pressed='true'] { background: var(--lime); color: var(--ink); border-color: var(--lime); }
+.hero.no-gl .hero__now-bar { visibility: hidden; } /* no autoplay without WebGL, so no progress */
 .hero__intro { grid-column: 1 / 6; }
 .hero__intro .reg { margin-bottom: 16px; color: var(--lime); }
 
@@ -471,7 +488,7 @@ body.menu-open .hdr .avail, body.menu-open .hdr__logo .dot { background: var(--i
 /* Work index -------------------------------------------------------------- */
 .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding-block: 18px; border-block: 1px solid var(--rule); position: sticky; top: var(--header-h); z-index: 20; background: var(--ink); transition: top .5s var(--ease-out); }
 /* The header slides away on scroll down; the toolbar follows it up, then drops back below it */
-body:has(.hdr.is-hidden) .toolbar { top: 0; }
+body:has(.hdr.is-hidden):not(:has(.hdr :focus-visible)) .toolbar { top: 0; }
 .filters, .views { display: flex; gap: 6px; flex-wrap: wrap; }
 .chip { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px 9px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--rule); font: 500 .7rem/1 var(--f-mono); letter-spacing: .07em; text-transform: uppercase; color: var(--dim); transition: background-color .2s var(--ease), color .2s, box-shadow .2s; }
 .chip sup { font-size: .85em; opacity: .7; }
@@ -561,6 +578,17 @@ body:has(.hdr.is-hidden) .toolbar { top: 0; }
 .fig figcaption { margin-top: 12px; display: flex; justify-content: space-between; gap: 16px; align-items: baseline; }
 .fig figcaption .mono { color: var(--faint); flex: none; }
 .fig figcaption p { color: var(--dim); font-size: .9rem; line-height: 1.4; text-align: right; max-width: 52ch; }
+/* A script slide's text, set as a script sheet under it (the slide stays as the visual) */
+.vo-script { grid-column: 1 / -1; margin-top: calc(-1 * clamp(20px, 2.4vw, 36px) + 14px); border-top: 1px solid var(--rule); }
+.vo-script summary { display: flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; list-style: none; color: var(--dim); transition: color .2s; }
+.vo-script summary::-webkit-details-marker { display: none; }
+.vo-script summary::before { content: '+'; content: '+' / ''; width: 1ch; color: var(--lime); }
+.vo-script[open] summary::before { content: '−'; content: '−' / ''; }
+.vo-script summary:hover { color: var(--fg); }
+.vo-script__sheet { display: grid; grid-template-columns: 9ch minmax(0, 1fr); gap: 12px 24px; max-width: 80ch; padding: 6px 0 24px; }
+.vo-script__sheet dt { color: var(--lime); padding-top: .35em; }
+.vo-script__sheet dd { line-height: 1.5; }
+.vo-script__sheet dd.dir { color: var(--dim); font-style: italic; }
 .live { margin-top: clamp(28px, 4vw, 48px); }
 .live__frame { position: relative; aspect-ratio: 16 / 10; border: 1px solid var(--rule); border-top: 0; border-radius: 0 0 10px 10px; overflow: hidden; background: var(--ink-2); }
 .live__frame iframe { width: 100%; height: 100%; border: 0; background: #fff; }
@@ -581,7 +609,7 @@ body:has(.hdr.is-hidden) .toolbar { top: 0; }
 .next:hover .next__title { font-stretch: 90%; color: var(--lime); }
 .next__media { display: block; position: absolute; right: var(--margin); top: 50%; width: clamp(200px, 26vw, 420px); aspect-ratio: 4 / 3; overflow: hidden; transform: translateY(-40%) rotate(3deg) scale(.9); opacity: 0; transition: opacity .4s var(--ease), transform .8s var(--ease-out); pointer-events: none; }
 .next__media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.next:hover .next__media { opacity: 1; transform: translateY(-50%) rotate(-2deg) scale(1); }
+.next:hover .next__media, .next:focus-visible .next__media { opacity: 1; transform: translateY(-50%) rotate(-2deg) scale(1); }
 
 /* About ------------------------------------------------------------------- */
 .about-hero { align-items: end; row-gap: 36px; }
@@ -645,21 +673,29 @@ body:has(.hdr.is-hidden) .toolbar { top: 0; }
 .channel:hover { padding-left: 12px; }
 .channel:hover .channel__v { color: var(--lime); }
 .channel:hover svg { transform: rotate(-45deg); color: var(--lime); }
-.form { grid-column: 8 / 13; position: relative; padding: clamp(22px, 2.6vw, 36px); background: var(--paper); color: var(--ink); --rule: rgb(11 11 10 / .16); --faint: #64625c; }
+.form { grid-column: 8 / 13; position: relative; padding: clamp(22px, 2.6vw, 36px); background: var(--paper); color: var(--ink); --fg: var(--ink); --bg: var(--paper); --rule: rgb(11 11 10 / .16); --faint: #64625c; }
 .form__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 18px; border-bottom: 1px solid var(--rule); margin-bottom: 8px; }
 .field { display: grid; gap: 8px; padding: 18px 0; border-bottom: 1px solid var(--rule); }
 .field label { color: var(--faint); }
 .field input, .field textarea { width: 100%; background: transparent; border: 0; color: var(--ink); font: 500 1.2rem/1.4 var(--f-text); resize: vertical; padding: 4px 0; outline: 0; }
 .field textarea { min-height: 140px; }
-.field:focus-within { border-bottom-color: var(--ink); }
+.field:focus-within { border-bottom-color: var(--ink); box-shadow: inset 0 -1px 0 var(--ink); } /* a 2px ink rule under the active field */
 .field:focus-within label { color: var(--ink); }
 .field input::placeholder, .field textarea::placeholder { color: rgb(11 11 10 / .32); }
 .form__foot { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 22px; flex-wrap: wrap; }
 .form .btn { --b-bg: var(--ink); --b-fg: var(--paper); }
 .form .btn:hover { background: var(--lime); color: var(--ink); }
 .form__status { color: var(--faint); }
-.form__status.is-ok { color: #2f6a00; }
-.form__status.is-err { color: #a32a12; }
+/* Busy: the press is running; the button can't be pressed twice and says so */
+.form[aria-busy='true'] .btn, .form .btn:disabled { background: var(--ink); color: var(--paper); opacity: .6; cursor: progress; transform: none; }
+.form[aria-busy='true'] .btn .arrow { animation: spin 1.2s linear infinite; }
+/* Result: a proof slip, lime when it went to press, red when it didn't */
+.form__status.is-ok, .form__status.is-err { flex-basis: 100%; order: 2; padding: 12px 14px; font-size: .78rem; line-height: 1.45; }
+.form__status.is-ok { background: var(--lime); color: var(--ink); }
+.form__status.is-err { background: #a32a12; color: var(--paper); }
+.form__status.is-err { --focus: var(--paper); } /* 6:1 on the red slip; ink would be 2.7:1 */
+.form__status.is-err a { text-decoration: underline; text-underline-offset: 3px; }
+.form__foot:has(.is-ok, .is-err) .btn { margin-left: auto; } /* stays right when the result slip takes its own row */
 
 /* Archive ----------------------------------------------------------------- */
 .ablock { padding-block: clamp(48px, 6vw, 96px); border-top: 1px solid var(--rule); }
@@ -701,11 +737,15 @@ body:has(.hdr.is-hidden) .toolbar { top: 0; }
 /* Lightbox ---------------------------------------------------------------- */
 .lightbox { position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; border: 0; padding: 0; background: rgb(11 11 10 / .97); color: var(--paper); }
 .lightbox::backdrop { background: rgb(11 11 10 / .9); }
-.lightbox[open] { display: grid; grid-template-rows: auto 1fr auto; animation: lb-in .35s var(--ease) both; }
+.lightbox[open] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; animation: lb-in .35s var(--ease) both; overscroll-behavior: contain; }
+html:has(.lightbox[open]) { overflow: hidden; } /* the page doesn't scroll behind the viewer */
 @keyframes lb-in { from { opacity: 0; } }
 .lightbox__top, .lightbox__foot { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px var(--margin); }
-.lightbox__stage { position: relative; display: grid; place-items: center; padding: 0 var(--margin); min-height: 0; }
-.lightbox__stage img { max-width: 100%; max-height: 100%; object-fit: contain; width: auto; height: auto; }
+/* The image is placed in the stage's box, so it fits between the top bar and the caption at any
+   viewport height (a % max-height can't resolve against an auto grid row). pan-y hands sideways
+   swipes to the script. */
+.lightbox__stage { position: relative; min-height: 0; touch-action: pan-y pinch-zoom; -webkit-user-select: none; user-select: none; } /* a stray selection would turn the next drag into a native drag */
+.lightbox__stage img { position: absolute; inset: 0 var(--margin); margin: auto; max-width: calc(100% - 2 * var(--margin)); max-height: 100%; width: auto; height: auto; object-fit: contain; -webkit-user-drag: none; user-select: none; }
 .lightbox__nav { display: flex; gap: 8px; }
 .lightbox button.icon { width: 46px; height: 46px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--rule-strong); display: grid; place-items: center; transition: background-color .2s, color .2s; }
 .lightbox button.icon:hover { background: var(--lime); color: var(--ink); }
@@ -811,6 +851,8 @@ body:has(.hdr.is-hidden) .toolbar { top: 0; }
   .gallery { grid-template-columns: 1fr; }
   .fig figcaption { flex-direction: column; gap: 6px; }
   .fig figcaption p { text-align: left; }
+  .vo-script__sheet { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .vo-script__sheet dd { margin-bottom: 12px; }
   .about-hero__text, .about-hero__portrait { grid-column: 1 / -1; }
   .trow__date, .trow__role, .trow__desc { grid-column: 1 / -1; }
   .skills, .scripts { grid-template-columns: 1fr; }
@@ -852,7 +894,7 @@ body:has(.hdr.is-hidden) .toolbar { top: 0; }
   .js .print-in { -webkit-mask: none; mask: none; }
   .marquee__track { animation: none; flex-wrap: wrap; width: auto; }
   .marquee__item[aria-hidden='true'] { display: none; }
-  .marquee__toggle { display: none; } /* the list is already still */
+  .marquee__toggle, .hero__now-ctrl .hero__hold { display: none; } /* already still */
   .px img { animation: none; scale: 1; }
   .manifesto__text .w { color: var(--ink); }
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
