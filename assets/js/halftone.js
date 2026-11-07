@@ -191,7 +191,7 @@ export class Halftone {
     this.cur = 0; this.nxt = 0; this.prog = 0; this.transStart = 0; this.inTrans = false;
     this.intro = this.reduced ? 1 : 0; this.introStart = 0;
     this.mouse = { x: -9999, y: -9999, tx: -9999, ty: -9999, on: 0, target: 0, last: 0 };
-    this.scroll = 0; this.visible = true; this.running = false; this.cycleAt = 0; this.paused = false;
+    this.scroll = 0; this.visible = true; this.running = false; this.cycleAt = 0; this.paused = false; this.held = false; this.heldAt = 0; this.tOff = 0;
     this.ok = this.init();
   }
 
@@ -293,7 +293,8 @@ export class Halftone {
     this.o.onChange && this.o.onChange(0);
     // remaining images load lazily, one at a time
     const rest = async () => { for (let i = 1; i < imgs.length; i++) { try { this.tex[i] = this.upload(await this.load(imgs[i])); } catch (e) { /* skip */ } } };
-    ('requestIdleCallback' in window ? requestIdleCallback : setTimeout)(rest);
+    // a busy rAF loop can starve idle time, so the rest load by 1.5 s at the latest
+    if ('requestIdleCallback' in window) requestIdleCallback(rest, { timeout: 1500 }); else setTimeout(rest, 200);
     return true;
   }
 
@@ -310,6 +311,14 @@ export class Halftone {
   prev() { this.goTo(this.cur - 1); this.cycleAt = performance.now() + this.o.cycle + this.o.transition; }
   setScroll(v) { const n = clamp(v, 0, 1); if (Math.abs(n - this.scroll) > .0005) { this.scroll = n; this.kick(); } }
   pause(p) { this.paused = p; if (!p) this.cycleAt = performance.now() + this.o.cycle; this.kick(); }
+  // Hold press (the visitor's pause control): no slide cycle, no breathing, no wandering lens.
+  // The dot screen's clock stops where it is and carries on from there on release.
+  hold(on) {
+    const now = performance.now();
+    if (on && !this.held) this.heldAt = now;
+    if (!on && this.held) { this.tOff += now - this.heldAt; this.cycleAt = now + this.o.cycle; }
+    this.held = on; this.kick();
+  }
 
   kick() { if (this.running && !this.raf && this.visible && !document.hidden) this.raf = requestAnimationFrame(this.loop); }
   stop() { this.running = false; if (this.raf) cancelAnimationFrame(this.raf); this.raf = 0; }
@@ -324,7 +333,7 @@ export class Halftone {
     if (this.intro < 1) { this.intro = clamp((now - this.introStart) / 1800, 0, 1); animating = true; }
 
     // auto cycle
-    if (o.cycle && !this.reduced && !this.paused && !this.inTrans && now >= this.cycleAt && this.o.images.length > 1) {
+    if (o.cycle && !this.reduced && !this.paused && !this.held && !this.inTrans && now >= this.cycleAt && this.o.images.length > 1) {
       const i = (this.cur + 1) % this.o.images.length;
       if (this.tex[i]) { this.goTo(i); this.cycleAt = now + o.cycle + o.transition; } else this.cycleAt = now + 400;
     }
@@ -333,14 +342,14 @@ export class Halftone {
       if (this.prog >= 1) { this.cur = this.nxt; this.prog = 0; this.inTrans = false; }
       animating = true;
     }
-    if (o.cycle && !this.reduced && !this.paused) {
+    if (o.cycle && !this.reduced && !this.paused && !this.held) {
       o.onTick && o.onTick(this.inTrans ? 0 : 1 - clamp((this.cycleAt - now) / o.cycle, 0, 1));
       animating = true;
     }
 
     // loupe: follow pointer, or wander when idle on touch / when asked
     const idle = now - m.last > 4000;
-    if (o.wander && (idle || m.last === 0) && !this.reduced) {
+    if (o.wander && (idle || m.last === 0) && !this.reduced && !this.held) {
       const t = now / 1000;
       m.tx = this.w * (0.5 + 0.32 * Math.sin(t * 0.37)); m.ty = this.h * (0.42 + 0.22 * Math.sin(t * 0.53 + 1.3));
       m.target = 0.75;
@@ -362,7 +371,7 @@ export class Halftone {
     }
     m.on += (m.target - m.on) * (this.reduced ? 1 : 0.12);
     if (Math.abs(m.tx - m.x) > .3 || Math.abs(m.ty - m.y) > .3 || Math.abs(m.target - m.on) > .002) animating = true;
-    if (!this.reduced) animating = true; // breathing
+    if (!this.reduced && !this.held) animating = true; // breathing
 
     const a = this.tex[this.cur], b = this.tex[this.inTrans ? this.nxt : this.cur];
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, a.t);
@@ -372,14 +381,15 @@ export class Halftone {
     gl.uniform2f(this.u.uSizeA, a.w, a.h); gl.uniform2f(this.u.uSizeB, b.w, b.h);
     gl.uniform1f(this.u.uGainA, a.gain); gl.uniform1f(this.u.uGainB, b.gain);
     gl.uniform1f(this.u.uProg, this.inTrans ? this.prog : 0);
-    gl.uniform1f(this.u.uTime, this.reduced ? 0 : now / 1000);
+    const clock = (this.held ? this.heldAt : now) - this.tOff; // stops while held, resumes without a jump
+    gl.uniform1f(this.u.uTime, this.reduced ? 0 : clock / 1000);
     gl.uniform2f(this.u.uMouse, m.x, m.y);
     gl.uniform1f(this.u.uLoupeR, o.loupe * this.dpr * (o.wander && m.target < 1 ? 0.8 : 1));
     gl.uniform1f(this.u.uLoupeOn, m.on);
     gl.uniform2f(this.u.uVel, st.x, st.y);
     gl.uniform1f(this.u.uScroll, this.scroll);
     gl.uniform1f(this.u.uIntro, this.intro);
-    gl.uniform1f(this.u.uDrift, this.reduced ? 0.02 : 0.02 + 0.02 * Math.sin(now / 9000));
+    gl.uniform1f(this.u.uDrift, this.reduced ? 0.02 : 0.02 + 0.02 * Math.sin(clock / 9000));
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
     if (animating) this.raf = requestAnimationFrame(this.loop);
